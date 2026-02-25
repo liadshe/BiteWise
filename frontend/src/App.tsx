@@ -1,4 +1,6 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import HomePage from './components/HomePage';
 import Sidebar from './components/SideBar';
 import PostPage from './components/PostPage'; 
@@ -8,6 +10,7 @@ import './App.css';
 function App() {
   return (
     <BrowserRouter>
+    <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         {/* 1. The default landing page is now Login */}
         <Route path="/" element={<Login />} />
