@@ -23,7 +23,6 @@ afterAll(() => {
   mongoose.connection.close();
 });
 
-
 describe("Comment Tests Suite", () => {
     test("Initial empty comments", async () => {
         const response = await request(app).get("/comment");

@@ -49,15 +49,20 @@ const getLoggedInUser = (app) => __awaiter(void 0, void 0, void 0, function* () 
     };
 });
 exports.getLoggedInUser = getLoggedInUser;
+// 2. עדכנו את נתוני המוק (Mock) במערך
 exports.postsList = [
     {
-        content: "This is the content of test post 1",
+        title: "Test Pasta Recipe",
+        description: "This is the description of test post 1",
+        cuisine: "Italian",
         imgUrl: "public/images/recipe1.jpg",
         likes: [],
         nutrition: { calories: 100, protein: 20, suggestions: "Add more vegetables" }
     },
     {
-        content: "This is the content of test post 2",
+        title: "Test Tacos Recipe",
+        description: "This is the description of test post 2",
+        cuisine: "Mexican",
         imgUrl: "public/images/recipe2.jpg",
         likes: [],
         nutrition: { calories: 150, protein: 30, suggestions: "Add more protein" }

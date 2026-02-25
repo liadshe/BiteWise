@@ -53,23 +53,32 @@ export const getLoggedInUser = async (app: Express): Promise<UserData> => {
 }
 
 
+// 1. עדכנו את הטיפוס כדי שיתאים למודל החדש
 export type PostData = { 
     _id?: string,
-    content: string,
+    title: string,
+    description: string,
+    cuisine: string,
     imgUrl: string,
     owner?: string,
     likes: string[],
-    nutrition?: { calories: number, protein: number, suggestions: string } };
+    nutrition?: { calories: number, protein: number, suggestions: string } 
+};
 
+// 2. עדכנו את נתוני המוק (Mock) במערך
 export const postsList: PostData[] = [
     {
-        content: "This is the content of test post 1",
+        title: "Test Pasta Recipe",
+        description: "This is the description of test post 1",
+        cuisine: "Italian",
         imgUrl: "public/images/recipe1.jpg",
         likes: [],
         nutrition: { calories: 100, protein: 20, suggestions: "Add more vegetables" }
     },
     {
-        content: "This is the content of test post 2",
+        title: "Test Tacos Recipe",
+        description: "This is the description of test post 2",
+        cuisine: "Mexican",
         imgUrl: "public/images/recipe2.jpg",
         likes: [],
         nutrition: { calories: 150, protein: 30, suggestions: "Add more protein" }
@@ -103,7 +112,8 @@ export type CommentData = {
     _id?: string,
     content: string,
     owner?: string,
-    postId?: string };
+    postId?: string 
+};
 
 export const commentsList: CommentData[] = [
   { content: "this is my comment", postId: "507f1f77bcf86cd799439012" },
