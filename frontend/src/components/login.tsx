@@ -43,7 +43,6 @@ const Login = () => {
                 
                 <div className="mb-5">
                     <img src={logo} alt="BiteWise Logo" style={{ width: '100px', padding: '10px' }} />
-                    <h2 className="mt-2" style={{ color: '#e91e63', fontWeight: 'bold' }}>BiteWise</h2>
                     <p className="text-secondary small">Social Network for Cooking Lovers</p>
                 </div>
 
