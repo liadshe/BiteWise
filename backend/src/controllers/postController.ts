@@ -1,4 +1,5 @@
 import Post from "../models/postModel";
+import Comment from "../models/commentModel";
 import { Request, Response } from "express"; // ודאי ש-Request מיובא מכאן
 import baseController from "./baseController";
 import { AuthRequest } from "../middleware/authMiddleware";
@@ -8,13 +9,13 @@ class PostsController extends baseController {
         super(Post);
     }
 
-    async getAll(req: Request, res: Response) {
+   async getAll(req: Request, res: Response) {
         try {
             const queryObj = { ...req.query };
             const excludedFields = ['page', 'limit', 'search'];
             excludedFields.forEach(el => delete queryObj[el]);
 
-            let query = this.model.find(queryObj).populate('owner', 'username imgUrl');
+            let query = this.model.find(queryObj).populate('owner', 'username imgUrl').lean();
 
             if (req.query.page) {
                 const page = parseInt(req.query.page as string) || 1;
@@ -23,8 +24,18 @@ class PostsController extends baseController {
                 query = query.skip(skip).limit(limit);
             }
 
-            const data = await query;
-            res.json(data);
+            const posts = await query;
+
+            // count comments for each post and add commentsCount field to the response
+            const postsWithCommentsCount = await Promise.all(posts.map(async (post: any) => {
+                const commentsCount = await Comment.countDocuments({ postId: post._id });
+                return {
+                    ...post,
+                    commentsCount 
+                };
+            }));
+
+            res.json(postsWithCommentsCount);
         } catch (err) {
             console.error(err);
             res.status(500).send("Error retrieving posts");

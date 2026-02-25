@@ -39,7 +39,7 @@ function HomePage() {
                     // check if current user has liked the post
                     isLiked: Array.isArray(post.likes) ? post.likes.includes(currentUserId) : false,
                     
-                    comments: 0
+                    comments: post.commentsCount || 0
                 }));
 
                 setPosts(formattedPosts); 

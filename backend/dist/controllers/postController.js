@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const postModel_1 = __importDefault(require("../models/postModel"));
+const commentModel_1 = __importDefault(require("../models/commentModel"));
 const baseController_1 = __importDefault(require("./baseController"));
 class PostsController extends baseController_1.default {
     constructor() {
@@ -24,15 +25,20 @@ class PostsController extends baseController_1.default {
                 const queryObj = Object.assign({}, req.query);
                 const excludedFields = ['page', 'limit', 'search'];
                 excludedFields.forEach(el => delete queryObj[el]);
-                let query = this.model.find(queryObj).populate('owner', 'username imgUrl');
+                let query = this.model.find(queryObj).populate('owner', 'username imgUrl').lean();
                 if (req.query.page) {
                     const page = parseInt(req.query.page) || 1;
                     const limit = parseInt(req.query.limit) || 10;
                     const skip = (page - 1) * limit;
                     query = query.skip(skip).limit(limit);
                 }
-                const data = yield query;
-                res.json(data);
+                const posts = yield query;
+                // count comments for each post and add commentsCount field to the response
+                const postsWithCommentsCount = yield Promise.all(posts.map((post) => __awaiter(this, void 0, void 0, function* () {
+                    const commentsCount = yield commentModel_1.default.countDocuments({ postId: post._id });
+                    return Object.assign(Object.assign({}, post), { commentsCount });
+                })));
+                res.json(postsWithCommentsCount);
             }
             catch (err) {
                 console.error(err);
