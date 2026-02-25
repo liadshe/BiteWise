@@ -15,20 +15,28 @@ class BaseController {
     }
     getAll(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield new Promise(resolve => setTimeout(() => resolve(), 5000));
             try {
-                if (req.query) {
-                    const filterData = yield this.model.find(req.query);
-                    return res.json(filterData);
+                // duplicate the req.query object to avoid mutating it
+                const queryObj = Object.assign({}, req.query);
+                // remove fields that are not meant for filtering (like page, limit, search)
+                const excludedFields = ['page', 'limit', 'search'];
+                excludedFields.forEach(el => delete queryObj[el]);
+                // create a Mongoose query based on the remaining query parameters
+                let query = this.model.find(queryObj);
+                // if paging is needed, calculate skip and limit
+                if (req.query.page) {
+                    const page = parseInt(req.query.page) || 1;
+                    const limit = parseInt(req.query.limit) || 10; // ברירת מחדל: 10 פוסטים בעמוד
+                    const skip = (page - 1) * limit;
+                    query = query.skip(skip).limit(limit);
                 }
-                else {
-                    const data = yield this.model.find();
-                    res.json(data);
-                }
+                // run query and return results
+                const data = yield query;
+                res.json(data);
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send("Error retrieving movies");
+                res.status(500).send("Error retrieving data");
             }
         });
     }
@@ -39,7 +47,7 @@ class BaseController {
             try {
                 const data = yield this.model.findById(id);
                 if (!data) {
-                    return res.status(404).send("Movie not found");
+                    return res.status(404).send("Item not found");
                 }
                 else {
                     res.json(data);
@@ -47,22 +55,22 @@ class BaseController {
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send("Error retrieving movie by ID");
+                res.status(500).send("Error retrieving item by ID");
             }
         });
     }
     ;
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const movieData = req.body;
-            console.log(movieData);
+            const itemData = req.body;
+            console.log(itemData);
             try {
-                const data = yield this.model.create(movieData);
+                const data = yield this.model.create(itemData);
                 res.status(201).json(data);
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send("Error creating movie");
+                res.status(500).send("Error creating item");
             }
         });
     }
@@ -77,7 +85,7 @@ class BaseController {
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send("Error deleting movie");
+                res.status(500).send("Error deleting item");
             }
         });
     }
@@ -94,7 +102,7 @@ class BaseController {
             }
             catch (err) {
                 console.error(err);
-                res.status(500).send("Error updating movie");
+                res.status(500).send("Error updating item");
             }
         });
     }

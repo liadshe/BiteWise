@@ -12,16 +12,35 @@ function HomePage() {
 
     const cuisines = ['All', 'Italian', 'Mediterranean', 'Asian', 'Mexican', 'American'];
 
-    // 2. Networking (Fetching Data)
+    // Fetching Data
+    // Fetching Data
     useEffect(() => {
         const fetchPosts = async () => {
             setIsLoading(true);
             setError(null);
             
             try {
-                // get posts with current filters
-                const data = await getPosts(1, cuisineFilter, searchQuery); 
-                setPosts(data); 
+                // שלב 1: עכשיו שולחים את הפרמטרים האמיתיים!
+                // אם המטבח הוא All נשלח מחרוזת ריקה כדי שהשרת לא יסנן לפי מטבח
+                const selectedCuisine = cuisineFilter === 'All' ? '' : cuisineFilter;
+                const data = await getPosts(1, selectedCuisine, searchQuery); 
+                
+                // שלב 2: מיפוי המידע לשמות שהקומפוננטה מכירה
+                const formattedPosts = data.map((post: any) => ({
+                    id: post._id,
+                    title: post.title,
+                    description: post.description,
+                    cuisine: post.cuisine,
+                    imageUrl: post.imgUrl,
+                    calories: post.nutrition?.calories || 0,
+                    protein: post.nutrition?.protein || 0,
+                    authorName: post.owner, 
+                    authorAvatar: "https://ui-avatars.com/api/?name=Chef",
+                    likes: post.likes?.length || 0,
+                    comments: 0
+                }));
+
+                setPosts(formattedPosts); 
             } catch (err) {
                 console.error("Error fetching posts:", err);
                 setError("Failed to fetch posts. Please try again later.");
@@ -31,7 +50,7 @@ function HomePage() {
         };
 
         fetchPosts();
-    }, [cuisineFilter, searchQuery]);
+    }, [cuisineFilter, searchQuery]); 
 
     return (
         <div className="container-fluid p-5">
