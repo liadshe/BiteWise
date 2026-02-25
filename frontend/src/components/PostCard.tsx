@@ -1,4 +1,4 @@
-interface RecipeProps {
+interface PostProps {
     id: string;
     title: string;
     description: string;
@@ -13,7 +13,7 @@ interface RecipeProps {
     onLike: (id: string) => void;
 }
 
-function RecipeCard({ id, title, description, cuisine, calories, protein, imageUrl, authorName, authorAvatar, likes, comments, onLike }: RecipeProps) {
+function PostCard({ id, title, description, cuisine, calories, protein, imageUrl, authorName, authorAvatar, likes, comments, onLike }: PostProps) {
     return (
         <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '16px', overflow: 'hidden' }}>
             
@@ -58,4 +58,4 @@ function RecipeCard({ id, title, description, cuisine, calories, protein, imageU
     );
 }
 
-export default RecipeCard;
+export default PostCard;

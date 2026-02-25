@@ -1,18 +1,37 @@
 import { useState, useEffect } from 'react';
-import RecipeCard from './recipeCard';
+import PostCard from './PostCard';
+import { getPosts } from '../services/postService';
 
 function HomePage() {
+    const [posts, setPosts] = useState<any[]>([]); 
     const [searchQuery, setSearchQuery] = useState('');
     const [cuisineFilter, setCuisineFilter] = useState('All');
+    
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const cuisines = ['All', 'Italian', 'Mediterranean', 'Asian', 'Mexican', 'American'];
 
-    // נתוני דמי (Mock data) כדי לראות את העיצוב עד שנחבר לשרת
-    const mockRecipes = [
-        { id: '1', title: 'Pasta with Tomato and Basil Sauce', description: 'Classic Italian pasta with fresh tomato sauce and basil', cuisine: 'Italian', calories: 420, protein: 14, imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=500', authorName: 'Sarah Cohen', authorAvatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen', likes: 1, comments: 1 },
-        { id: '2', title: 'Fresh Greek Salad', description: 'Classic Mediterranean salad with feta cheese and olives', cuisine: 'Mediterranean', calories: 280, protein: 9, imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500', authorName: 'Michal Abraham', authorAvatar: 'https://ui-avatars.com/api/?name=Michal+Abraham', likes: 2, comments: 0 },
-        { id: '3', title: 'Fried Rice with Vegetables', description: 'Quick and healthy Asian dish', cuisine: 'Asian', calories: 380, protein: 12, imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500', authorName: 'Sarah Cohen', authorAvatar: 'https://ui-avatars.com/api/?name=Sarah+Cohen', likes: 0, comments: 0 },
-    ];
+    // 2. Networking (Fetching Data)
+    useEffect(() => {
+        const fetchPosts = async () => {
+            setIsLoading(true);
+            setError(null);
+            
+            try {
+                // get posts with current filters
+                const data = await getPosts(1, cuisineFilter, searchQuery); 
+                setPosts(data); 
+            } catch (err) {
+                console.error("Error fetching posts:", err);
+                setError("Failed to fetch posts. Please try again later.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, [cuisineFilter, searchQuery]);
 
     return (
         <div className="container-fluid p-5">
@@ -24,7 +43,7 @@ function HomePage() {
                 <input 
                     type="text" 
                     className="form-control form-control-lg border-0 shadow-sm" 
-                    placeholder="Search recipes..." 
+                    placeholder="Search posts..." 
                     style={{ borderRadius: '20px', paddingRight: '40px' }}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -32,7 +51,7 @@ function HomePage() {
                 <i className="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
             </div>
 
-            {/* filter buttons */}
+            {/* filter buttons*/}
             <div className="d-flex gap-2 mb-5 overflow-auto">
                 {cuisines.map(cuisine => (
                     <button 
@@ -46,14 +65,20 @@ function HomePage() {
                 ))}
             </div>
 
-            {/* גריד המתכונים */}
-            <div className="row g-4">
-                {mockRecipes.map(recipe => (
-                    <div className="col-12 col-md-6 col-lg-4" key={recipe.id}>
-                        <RecipeCard {...recipe} onLike={(id) => console.log('Liked:', id)} />
-                    </div>
-                ))}
-            </div>
+            {isLoading && <div className="spinner-border text-danger" role="status"></div>}
+            {error && <div className="alert alert-danger m-3">{error}</div>}
+            {posts.length === 0 && !error && !isLoading && <p className="m-3">No posts to display</p>} 
+
+            {/* posts grid */}
+            {!isLoading && !error && posts.length > 0 && (
+                <div className="row g-4">
+                    {posts.map(post => (
+                        <div className="col-12 col-md-6 col-lg-4" key={post.id}>
+                            <PostCard {...post} onLike={(id) => console.log('Liked:', id)} />
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
