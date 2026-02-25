@@ -45,8 +45,7 @@ describe("Post Tests Suite", () => {
       expect(response.body.title).toBe(post.title);
       expect(response.body.description).toBe(post.description);
       expect(response.body.cuisine).toBe(post.cuisine);
-      
-      expect(response.body.owner).toBe(loginUser._id);
+      expect(response.body.owner._id).toBe(loginUser._id);
       expect(response.body.imgUrl).toBe(post.imgUrl);
       expect(response.body.likes).toEqual(post.likes);
       expect(response.body.nutrition).toEqual(post.nutrition);

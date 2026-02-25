@@ -1,5 +1,5 @@
 import Post from "../models/postModel";
-import { Response } from "express";
+import { Request, Response } from "express"; // ודאי ש-Request מיובא מכאן
 import baseController from "./baseController";
 import { AuthRequest } from "../middleware/authMiddleware";
 
@@ -7,6 +7,29 @@ class PostsController extends baseController {
     constructor() {
         super(Post);
     }
+
+    async getAll(req: Request, res: Response) {
+        try {
+            const queryObj = { ...req.query };
+            const excludedFields = ['page', 'limit', 'search'];
+            excludedFields.forEach(el => delete queryObj[el]);
+
+            let query = this.model.find(queryObj).populate('owner', 'username imgUrl');
+
+            if (req.query.page) {
+                const page = parseInt(req.query.page as string) || 1;
+                const limit = parseInt(req.query.limit as string) || 10;
+                const skip = (page - 1) * limit;
+                query = query.skip(skip).limit(limit);
+            }
+
+            const data = await query;
+            res.json(data);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error retrieving posts");
+        }
+    };
 
     // Override create method to associate post with authenticated user
     async create(req: AuthRequest, res: Response) {

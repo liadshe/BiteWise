@@ -20,12 +20,9 @@ function HomePage() {
             setError(null);
             
             try {
-                // שלב 1: עכשיו שולחים את הפרמטרים האמיתיים!
-                // אם המטבח הוא All נשלח מחרוזת ריקה כדי שהשרת לא יסנן לפי מטבח
                 const selectedCuisine = cuisineFilter === 'All' ? '' : cuisineFilter;
                 const data = await getPosts(1, selectedCuisine, searchQuery); 
                 
-                // שלב 2: מיפוי המידע לשמות שהקומפוננטה מכירה
                 const formattedPosts = data.map((post: any) => ({
                     id: post._id,
                     title: post.title,
@@ -33,9 +30,9 @@ function HomePage() {
                     cuisine: post.cuisine,
                     imageUrl: post.imgUrl,
                     calories: post.nutrition?.calories || 0,
-                    protein: post.nutrition?.protein || 0,
-                    authorName: post.owner, 
-                    authorAvatar: "https://ui-avatars.com/api/?name=Chef",
+                    protein: post.nutrition?.protein || 0,     
+                    authorName: post.owner?.username || "Unknown User", 
+                    authorAvatar: post.owner?.imgUrl || `https://ui-avatars.com/api/?name=${post.owner?.username || 'User'}&background=random`,                    
                     likes: post.likes?.length || 0,
                     comments: 0
                 }));

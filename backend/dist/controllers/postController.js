@@ -18,6 +18,29 @@ class PostsController extends baseController_1.default {
     constructor() {
         super(postModel_1.default);
     }
+    getAll(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const queryObj = Object.assign({}, req.query);
+                const excludedFields = ['page', 'limit', 'search'];
+                excludedFields.forEach(el => delete queryObj[el]);
+                let query = this.model.find(queryObj).populate('owner', 'username imgUrl');
+                if (req.query.page) {
+                    const page = parseInt(req.query.page) || 1;
+                    const limit = parseInt(req.query.limit) || 10;
+                    const skip = (page - 1) * limit;
+                    query = query.skip(skip).limit(limit);
+                }
+                const data = yield query;
+                res.json(data);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send("Error retrieving posts");
+            }
+        });
+    }
+    ;
     // Override create method to associate post with authenticated user
     create(req, res) {
         const _super = Object.create(null, {
