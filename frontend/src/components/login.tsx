@@ -1,58 +1,73 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import authService from '../services/authService';
+import logo from '../assets/logo.png'; 
 
 const Login = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
 
     const onSubmit = async (data: any) => {
         try {
-            const response = await authService.login(data.email, data.password);
-            alert("Successful Login!");
-            console.log("Token:", response.token);
+            await authService.login(data.email, data.password);
+            alert("Login successful!");
         } catch (err) {
-            alert("Error during login. Please check your credentials.");
+            console.error("Login failed", err);
+            alert("Invalid credentials.");
         }
     };
 
     return (
-        <div className="container-fluid vh-100 d-flex align-items-center justify-content-center" 
-             style={{ background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%)' }}>
+        <div className="container-fluid vh-100 d-flex align-items-center justify-content-center"> 
             
-            <div className="card shadow-lg p-4" style={{ width: '100%', maxWidth: '400px', borderRadius: '15px', border: 'none' }}>
-                <div className="text-center mb-4">
-                    <h2 style={{ color: '#8e24aa', fontWeight: 'bold' }}>BiteWise</h2>
-                    <p className="text-muted"> Cooking with awarness</p>
+            <div className="text-center" style={{ width: '100%', maxWidth: '400px' }}>
+                
+                <div className="mb-5">
+                    <img src={logo} alt="BiteWise Logo" style={{ width: '100px' }} />
+                    <p className="text-secondary">Social Network for Cooking Lovers</p>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} dir="rtl">
+                <form onSubmit={handleSubmit(onSubmit)} className="text-start">
                     <div className="mb-3">
-                        <label className="form-label">אימייל</label>
+                        <label className="form-label small fw-bold text-muted ms-1">Email</label>
                         <input 
                             type="email" 
-                            className="form-control" 
-                            {...register("email", { required: "חובה להזין אימייל" })} 
+                            className="form-control border-0 py-3 px-3 shadow-sm" 
+                            placeholder="your@email.com"
+                            style={{ backgroundColor: '#ffffff', borderRadius: '12px' }}
+                            {...register("email", { required: true })}
                         />
-                        {errors.email && <small className="text-danger">{(errors.email as any).message}</small>}
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">סיסמה</label>
+                    <div className="mb-5">
+                        <label className="form-label small fw-bold text-muted ms-1">Password</label>
                         <input 
                             type="password" 
-                            className="form-control" 
-                            {...register("password", { required: "חובה להזין סיסמה" })} 
+                            className="form-control border-0 py-3 px-3 shadow-sm" 
+                            placeholder="Enter password"
+                            style={{ backgroundColor: '#ffffff', borderRadius: '12px' }}
+                            {...register("password", { required: true })}
                         />
-                        {errors.password && <small className="text-danger">{(errors.password as any).message}</small>}
                     </div>
 
-                    <button type="submit" className="btn w-100 mt-2" style={{ backgroundColor: '#ab47bc', color: 'white', fontWeight: 'bold' }}>
-                        כניסה
+                    <button type="submit" className="btn w-100 py-3 text-white fw-bold shadow" 
+                            style={{ 
+                                backgroundColor: '#f02d8e', 
+                                borderRadius: '12px', 
+                                border: 'none',
+                                fontSize: '1.1rem' 
+                            }}>
+                        Login
                     </button>
                 </form>
+
+                <div className="mt-5">
+                    <p className="small fw-bold" style={{ color: '#f02d8e', cursor: 'pointer' }}>
+                        Don't have an account? Sign Up
+                    </p>
+                </div>
             </div>
         </div>
-    );
+  );
 };
 
 export default Login;
