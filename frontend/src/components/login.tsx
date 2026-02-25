@@ -2,17 +2,19 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import authService from '../services/authService';
 import logo from '../assets/logo.png'; 
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const { register, handleSubmit, formState: { errors } } = useForm();
-
+    const navigate = useNavigate();
+    
     const onSubmit = async (data: any) => {
         try {
             await authService.login(data.email, data.password);
-            alert("Login successful!");
+            navigate('/home');
         } catch (err) {
             console.error("Login failed", err);
-            alert("Invalid credentials.");
+            alert("Invalid credentials.Try gain");
         }
     };
 
@@ -22,7 +24,7 @@ const Login = () => {
             <div className="text-center" style={{ width: '100%', maxWidth: '400px' }}>
                 
                 <div className="mb-5">
-                    <img src={logo} alt="BiteWise Logo" style={{ width: '100px' }} />
+                    <img src={logo} alt="BiteWise Logo" style={{ width: '100px', padding: '10px' }} />
                     <p className="text-secondary">Social Network for Cooking Lovers</p>
                 </div>
 
