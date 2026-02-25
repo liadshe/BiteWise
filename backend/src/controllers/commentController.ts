@@ -73,7 +73,10 @@ class CommentsController extends baseController {
             return;
         }
         try {
-            const comments = await this.model.find({ postId: postId });
+            const comments = await this.model.find({ postId: postId })
+                .populate('owner', 'username imgUrl')
+                .sort({ createdAt: -1 });
+                
             res.status(200).json(comments);
         } catch (err) {
             console.error(err);
