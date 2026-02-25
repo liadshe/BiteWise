@@ -1,5 +1,6 @@
 import Post from "../models/postModel";
-import { Response } from "express";
+import Comment from "../models/commentModel";
+import { Request, Response } from "express"; // ודאי ש-Request מיובא מכאן
 import baseController from "./baseController";
 import { AuthRequest } from "../middleware/authMiddleware";
 
@@ -7,6 +8,39 @@ class PostsController extends baseController {
     constructor() {
         super(Post);
     }
+
+   async getAll(req: Request, res: Response) {
+        try {
+            const queryObj = { ...req.query };
+            const excludedFields = ['page', 'limit', 'search'];
+            excludedFields.forEach(el => delete queryObj[el]);
+
+            let query = this.model.find(queryObj).populate('owner', 'username imgUrl').lean();
+
+            if (req.query.page) {
+                const page = parseInt(req.query.page as string) || 1;
+                const limit = parseInt(req.query.limit as string) || 10;
+                const skip = (page - 1) * limit;
+                query = query.skip(skip).limit(limit);
+            }
+
+            const posts = await query;
+
+            // count comments for each post and add commentsCount field to the response
+            const postsWithCommentsCount = await Promise.all(posts.map(async (post: any) => {
+                const commentsCount = await Comment.countDocuments({ postId: post._id });
+                return {
+                    ...post,
+                    commentsCount 
+                };
+            }));
+
+            res.json(postsWithCommentsCount);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error retrieving posts");
+        }
+    };
 
     // Override create method to associate post with authenticated user
     async create(req: AuthRequest, res: Response) {
@@ -61,6 +95,39 @@ class PostsController extends baseController {
             res.status(500).send("Error updating post");
         }
     };
+
+    // hendler for toggling like/unlike on a post
+    async toggleLike(req: AuthRequest, res: Response) {
+        try {
+            const postId = req.params.id;
+            const userId = req.user?._id; 
+
+            if (!userId) {
+                return res.status(401).send("Unauthorized");
+            }
+
+            const post = await this.model.findById(postId);
+            if (!post) {
+                return res.status(404).send("Post not found");
+            }
+
+            // check if user has already liked the post
+            const index = post.likes.indexOf(userId);
+            if (index === -1) {
+                // user has not liked the post - add like
+                post.likes.push(userId);
+            } else {
+                // user has already liked the post - remove like
+                post.likes.splice(index, 1);
+            }
+
+            await post.save();
+            res.status(200).json(post);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error toggling like");
+        }
+    }
 }
 
 export default new PostsController();
