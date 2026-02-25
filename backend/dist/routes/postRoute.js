@@ -17,5 +17,7 @@ router.post("/", authMiddleware_1.authenticate, postController_1.default.create.
 router.delete("/:id", authMiddleware_1.authenticate, postController_1.default.del.bind(postController_1.default));
 // update a post (requires authentication)
 router.put("/:id", authMiddleware_1.authenticate, postController_1.default.update.bind(postController_1.default));
+// toggle like on a post (requires authentication)
+router.post("/:id/like", authMiddleware_1.authenticate, postController_1.default.toggleLike.bind(postController_1.default));
 exports.default = router;
 //# sourceMappingURL=postRoute.js.map

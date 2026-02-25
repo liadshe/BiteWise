@@ -2,12 +2,14 @@ import express, { Express } from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config({path: '.env.dev'});
+import cors from "cors";
 
 import authRoute from "./routes/authRoute";
 import postRoute from "./routes/postRoute";
 import commentRoute from "./routes/commentRoute";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRoute);

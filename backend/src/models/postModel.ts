@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
-    content: { 
+    title: { 
+        type: String, 
+        required: true 
+    },
+    description: { 
+        type: String, 
+        required: true 
+    },
+    cuisine: { 
         type: String, 
         required: true 
     },
