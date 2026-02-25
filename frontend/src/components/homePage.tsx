@@ -11,7 +11,7 @@ function HomePage() {
     const [authMessage, setAuthMessage] = useState<string | null>(null);
     const cuisines = ['All', 'Italian', 'Mediterranean', 'Asian', 'Mexican', 'American'];
 
-    // Fetching Data
+   // Fetching Data
     useEffect(() => {
         const fetchPosts = async () => {
             setIsLoading(true);
@@ -21,6 +21,9 @@ function HomePage() {
                 const selectedCuisine = cuisineFilter === 'All' ? '' : cuisineFilter;
                 const data = await getPosts(1, selectedCuisine, searchQuery); 
                 
+                // get userId from localStorage
+                const currentUserId = localStorage.getItem('userId');
+
                 const formattedPosts = data.map((post: any) => ({
                     id: post._id,
                     title: post.title,
@@ -28,10 +31,14 @@ function HomePage() {
                     cuisine: post.cuisine,
                     imageUrl: post.imgUrl,
                     calories: post.nutrition?.calories || 0,
-                    protein: post.nutrition?.protein || 0,     
+                    protein: post.nutrition?.protein || 0,
                     authorName: post.owner?.username || "Unknown User", 
-                    authorAvatar: post.owner?.imgUrl || `https://ui-avatars.com/api/?name=${post.owner?.username || 'User'}&background=random`,                    
-                    likes: post.likes?.length || 0,
+                    authorAvatar: post.owner?.imgUrl || `https://ui-avatars.com/api/?name=${post.owner?.username || 'User'}&background=random`,
+                    
+                    likes: Array.isArray(post.likes) ? post.likes.length : 0,
+                    // check if current user has liked the post
+                    isLiked: Array.isArray(post.likes) ? post.likes.includes(currentUserId) : false,
+                    
                     comments: 0
                 }));
 
@@ -45,21 +52,27 @@ function HomePage() {
         };
 
         fetchPosts();
-    }, [cuisineFilter, searchQuery]); 
+    }, [cuisineFilter, searchQuery]);
 
-   const handleLike = async (postId: string) => {
+    const handleLike = async (postId: string) => {
         try {
             const updatedPostFromDB = await toggleLike(postId);
+            const currentUserId = localStorage.getItem('userId');
+
             setPosts(prevPosts => 
                 prevPosts.map(post => 
                     post.id === postId 
-                        ? { ...post, likes: updatedPostFromDB.likes.length } 
+                        ? { 
+                            ...post, 
+                            likes: updatedPostFromDB.likes.length,
+                            isLiked: updatedPostFromDB.likes.includes(currentUserId)
+                          } 
                         : post
                 )
             );
         } catch (err) {
             console.error("Failed to toggle like", err);
-            setAuthMessage("You need to be logged in to like a post!");
+            setAuthMessage("You need to be logged in to like a post! ");
             setTimeout(() => setAuthMessage(null), 3000); 
         }
     };
