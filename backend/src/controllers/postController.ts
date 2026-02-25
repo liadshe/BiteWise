@@ -84,6 +84,39 @@ class PostsController extends baseController {
             res.status(500).send("Error updating post");
         }
     };
+
+    // hendler for toggling like/unlike on a post
+    async toggleLike(req: AuthRequest, res: Response) {
+        try {
+            const postId = req.params.id;
+            const userId = req.user?._id; 
+
+            if (!userId) {
+                return res.status(401).send("Unauthorized");
+            }
+
+            const post = await this.model.findById(postId);
+            if (!post) {
+                return res.status(404).send("Post not found");
+            }
+
+            // check if user has already liked the post
+            const index = post.likes.indexOf(userId);
+            if (index === -1) {
+                // user has not liked the post - add like
+                post.likes.push(userId);
+            } else {
+                // user has already liked the post - remove like
+                post.likes.splice(index, 1);
+            }
+
+            await post.save();
+            res.status(200).json(post);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error toggling like");
+        }
+    }
 }
 
 export default new PostsController();

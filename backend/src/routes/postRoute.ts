@@ -19,4 +19,7 @@ router.delete("/:id", authenticate, postController.del.bind(postController));
 // update a post (requires authentication)
 router.put("/:id", authenticate, postController.update.bind(postController));
 
+// toggle like on a post (requires authentication)
+router.post("/:id/like", authenticate, postController.toggleLike.bind(postController));
+
 export default router;

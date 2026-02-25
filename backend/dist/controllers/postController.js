@@ -111,6 +111,39 @@ class PostsController extends baseController_1.default {
         });
     }
     ;
+    // hendler for toggling like/unlike on a post
+    toggleLike(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const postId = req.params.id;
+                const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+                if (!userId) {
+                    return res.status(401).send("Unauthorized");
+                }
+                const post = yield this.model.findById(postId);
+                if (!post) {
+                    return res.status(404).send("Post not found");
+                }
+                // check if user has already liked the post
+                const index = post.likes.indexOf(userId);
+                if (index === -1) {
+                    // user has not liked the post - add like
+                    post.likes.push(userId);
+                }
+                else {
+                    // user has already liked the post - remove like
+                    post.likes.splice(index, 1);
+                }
+                yield post.save();
+                res.status(200).json(post);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send("Error toggling like");
+            }
+        });
+    }
 }
 exports.default = new PostsController();
 //# sourceMappingURL=postController.js.map

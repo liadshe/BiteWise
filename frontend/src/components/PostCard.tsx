@@ -9,11 +9,12 @@ interface PostProps {
     authorName: string;
     authorAvatar: string;
     likes: number;
+    isLiked: boolean;
     comments: number;
     onLike: (id: string) => void;
 }
 
-function PostCard({ id, title, description, cuisine, calories, protein, imageUrl, authorName, authorAvatar, likes, comments, onLike }: PostProps) {
+function PostCard({ id, title, description, cuisine, calories, protein, imageUrl, authorName, authorAvatar, likes, isLiked,comments, onLike }: PostProps) {
     return (
         <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: '16px', overflow: 'hidden' }}>
             
@@ -30,15 +31,14 @@ function PostCard({ id, title, description, cuisine, calories, protein, imageUrl
             <img src={imageUrl} alt={title} style={{ height: '220px', objectFit: 'cover', width: '100%' }} />
             
             <div className="card-body d-flex flex-column">
-                {/* likes and comments */}
                 <div className="d-flex align-items-center gap-3 mb-2">
                     <span style={{ cursor: 'pointer', color: '#e81e61' }} onClick={() => onLike(id)}>
-                        <i className={`bi ${likes > 0 ? 'bi-heart-fill' : 'bi-heart'} me-1`}></i> {likes}
+                        <i className={`bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'} me-1`}></i> {likes}
                     </span>
                     <span className="text-muted">
                         <i className="bi bi-chat me-1"></i> {comments}
                     </span>
-                </div>
+                </div>   
 
                 {/* content */}
                 <h5 className="card-title fw-bold mt-2">{title}</h5>

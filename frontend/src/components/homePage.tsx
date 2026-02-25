@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
 import PostCard from './PostCard';
-import { getPosts } from '../services/postService';
+import { toggleLike, getPosts } from '../services/postService';
 
 function HomePage() {
     const [posts, setPosts] = useState<any[]>([]); 
     const [searchQuery, setSearchQuery] = useState('');
     const [cuisineFilter, setCuisineFilter] = useState('All');
-    
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const [authMessage, setAuthMessage] = useState<string | null>(null);
     const cuisines = ['All', 'Italian', 'Mediterranean', 'Asian', 'Mexican', 'American'];
 
-    // Fetching Data
     // Fetching Data
     useEffect(() => {
         const fetchPosts = async () => {
@@ -48,6 +46,23 @@ function HomePage() {
 
         fetchPosts();
     }, [cuisineFilter, searchQuery]); 
+
+   const handleLike = async (postId: string) => {
+        try {
+            const updatedPostFromDB = await toggleLike(postId);
+            setPosts(prevPosts => 
+                prevPosts.map(post => 
+                    post.id === postId 
+                        ? { ...post, likes: updatedPostFromDB.likes.length } 
+                        : post
+                )
+            );
+        } catch (err) {
+            console.error("Failed to toggle like", err);
+            setAuthMessage("You need to be logged in to like a post!");
+            setTimeout(() => setAuthMessage(null), 3000); 
+        }
+    };
 
     return (
         <div className="container-fluid p-5">
@@ -90,9 +105,22 @@ function HomePage() {
                 <div className="row g-4">
                     {posts.map(post => (
                         <div className="col-12 col-md-6 col-lg-4" key={post.id}>
-                            <PostCard {...post} onLike={(id) => console.log('Liked:', id)} />
+                            <PostCard {...post} onLike={handleLike} />
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* toast for unauthorized users */}
+            {authMessage && (
+                <div 
+                    className="alert alert-warning alert-dismissible fade show position-fixed bottom-0 end-0 m-4 shadow-lg" 
+                    role="alert" 
+                    style={{ zIndex: 1050, borderRadius: '12px' }}
+                >
+                    <i className="bi bi-exclamation-circle me-2"></i>
+                    {authMessage}
+                    <button type="button" className="btn-close" onClick={() => setAuthMessage(null)}></button>
                 </div>
             )}
         </div>
