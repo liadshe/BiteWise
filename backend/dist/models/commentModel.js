@@ -19,6 +19,6 @@ const commentSchema = new mongoose_1.default.Schema({
         ref: 'Post',
         required: true
     }
-});
+}, { timestamps: true });
 exports.default = mongoose_1.default.model('Comment', commentSchema);
 //# sourceMappingURL=commentModel.js.map

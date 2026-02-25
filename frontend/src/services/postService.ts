@@ -13,6 +13,11 @@ export const getPosts = async (page?: number, cuisine?: string, search?: string)
     return response.data;
 }
 
+export const getPostById = async (id: string) => {
+    const response = await axios.get(`${API_URL}/${id}`);
+    return response.data;
+}
+
 export const toggleLike = async (postId: string) => {
     // get token to authenticate the request
     const token = localStorage.getItem('token');     
