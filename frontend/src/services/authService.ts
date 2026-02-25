@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // @ts-ignore
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const AUTH_URL = `${API_BASE_URL}/auth`;
 
 interface AuthResponse {
@@ -51,9 +51,11 @@ const isLoggedIn = () => {
     return localStorage.getItem('accessToken') !== null;
 };
 
-export default {
+const authService = {
     login,
     register,
     logout,
     isLoggedIn
 };
+
+export default authService;
