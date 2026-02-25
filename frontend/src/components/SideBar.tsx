@@ -1,30 +1,59 @@
+import { Link, useLocation } from 'react-router-dom';
 import logoImg from '../assets/logo.png';
 
 function Sidebar() {
+    const location = useLocation();
+
+    const isActive = (path: string) => location.pathname === path;
+
     return (
         <div className="d-flex flex-column p-3 bg-white border-end" style={{ width: '280px', height: '100vh', position: 'sticky', top: 0 }}>
             {/* logo */}
-            <a href="/" className="d-flex align-items-center mb-4 text-decoration-none">
+            <Link to="/" className="d-flex align-items-center mb-4 text-decoration-none">
               <img src={logoImg} alt="BiteWise Logo" width="40" className="me-2" />
                 <span className="fs-4 fw-bold" style={{ color: '#e81e61' }}>BiteWise</span>
-            </a>
+            </Link>
 
             {/* navigation links */}
             <ul className="nav nav-pills flex-column mb-auto gap-2">
                 <li className="nav-item">
-                    <a href="#" className="nav-link active d-flex align-items-center" style={{ backgroundColor: '#e81e61', borderRadius: '12px' }}>
+                    {/* Home Link */}
+                    <Link 
+                        to="/" 
+                        className={`nav-link d-flex align-items-center ${isActive('/') ? 'active text-white' : 'text-dark'}`} 
+                        style={{ 
+                            backgroundColor: isActive('/') ? '#e81e61' : 'transparent', 
+                            borderRadius: '12px' 
+                        }}
+                    >
                         <i className="bi bi-house-door me-3"></i> Home
-                    </a>
+                    </Link>
                 </li>
                 <li>
-                    <a href="#" className="nav-link text-dark d-flex align-items-center">
+                    {/* Create Recipe Link */}
+                    <Link 
+                        to="/create" 
+                        className={`nav-link d-flex align-items-center ${isActive('/create') ? 'active text-white' : 'text-dark'}`}
+                        style={{ 
+                            backgroundColor: isActive('/create') ? '#e81e61' : 'transparent', 
+                            borderRadius: '12px' 
+                        }}
+                    >
                         <i className="bi bi-plus-circle me-3"></i> Create Recipe
-                    </a>
+                    </Link>
                 </li>
                 <li>
-                    <a href="#" className="nav-link text-dark d-flex align-items-center">
+                    {/* Profile Link */}
+                    <Link 
+                        to="/profile" 
+                        className={`nav-link d-flex align-items-center ${isActive('/profile') ? 'active text-white' : 'text-dark'}`}
+                        style={{ 
+                            backgroundColor: isActive('/profile') ? '#e81e61' : 'transparent', 
+                            borderRadius: '12px' 
+                        }}
+                    >
                         <i className="bi bi-person me-3"></i> My Profile
-                    </a>
+                    </Link>
                 </li>
             </ul>
 

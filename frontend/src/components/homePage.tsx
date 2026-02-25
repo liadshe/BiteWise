@@ -55,7 +55,14 @@ function HomePage() {
     }, [cuisineFilter, searchQuery]);
 
     const handleLike = async (postId: string) => {
-        try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        setAuthMessage("You need to be logged in to like a post!");
+        setTimeout(() => setAuthMessage(null), 3000); 
+        return;
+    }
+    try {
             const updatedPostFromDB = await toggleLike(postId);
             const currentUserId = localStorage.getItem('userId');
 

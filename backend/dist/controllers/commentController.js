@@ -99,7 +99,9 @@ class CommentsController extends baseController_1.default {
                 return;
             }
             try {
-                const comments = yield this.model.find({ postId: postId });
+                const comments = yield this.model.find({ postId: postId })
+                    .populate('owner', 'username imgUrl')
+                    .sort({ createdAt: -1 });
                 res.status(200).json(comments);
             }
             catch (err) {
