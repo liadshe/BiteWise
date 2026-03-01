@@ -6,18 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const postController_1 = __importDefault(require("../controllers/postController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
+const fileUpload_1 = require("../middleware/fileUpload");
 const router = express_1.default.Router();
-// get all posts or filter by owner id 
 router.get("/", postController_1.default.getAll.bind(postController_1.default));
-// get posts by owner id 
+router.post("/analyze", authMiddleware_1.authenticate, postController_1.default.analyze.bind(postController_1.default));
 router.get("/:id", postController_1.default.getById.bind(postController_1.default));
-// upload a post (requires authentication)
-router.post("/", authMiddleware_1.authenticate, postController_1.default.create.bind(postController_1.default));
-// delete a post (requires authentication)
+router.post("/", authMiddleware_1.authenticate, fileUpload_1.upload.single('image'), postController_1.default.create.bind(postController_1.default));
 router.delete("/:id", authMiddleware_1.authenticate, postController_1.default.del.bind(postController_1.default));
-// update a post (requires authentication)
 router.put("/:id", authMiddleware_1.authenticate, postController_1.default.update.bind(postController_1.default));
-// toggle like on a post (requires authentication)
 router.post("/:id/like", authMiddleware_1.authenticate, postController_1.default.toggleLike.bind(postController_1.default));
 exports.default = router;
 //# sourceMappingURL=postRoute.js.map

@@ -5,6 +5,7 @@ import HomePage from './components/HomePage';
 import Sidebar from './components/SideBar';
 import PostPage from './components/PostPage'; 
 import Login from './components/Login';
+import CreateRecipePage from './components/CreateRecipePage';
 import './App.css';
 
 function App() {
