@@ -28,3 +28,38 @@ export const toggleLike = async (postId: string) => {
     });
     return response.data;
 }
+
+export const createPost = async (postData: FormData) => {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}`, { 
+        method: 'POST',
+        headers: {
+            // DO NOT set 'Content-Type' here. The browser handles it for FormData.
+            'Authorization': `Bearer ${token}`
+        },
+        body: postData,
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create recipe');
+    }
+
+    return await response.json();
+};
+
+export const analyzeRecipe = async (recipeData: any) => {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_URL}/analyze`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(recipeData)
+    });
+
+    if (!response.ok) throw new Error('Failed to analyze recipe');
+    return await response.json();
+};
