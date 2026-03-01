@@ -1,26 +1,42 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import HomePage from './components/HomePage';
 import Sidebar from './components/SideBar';
 import PostPage from './components/PostPage'; 
+import Login from './components/Login';
 import CreateRecipePage from './components/CreateRecipePage';
 import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
-        <Sidebar />
-        <div className="flex-grow-1 overflow-auto" style={{ height: '100vh' }}>
-          <Routes>
-            {/* navigate to home page */}
-            <Route path="/" element={<HomePage />} />
-            {/* navigate to post page with dynamic id */}
-            <Route path="/post/:id" element={<PostPage />} />
-            {/* navigate to create recipe page */}
-            <Route path="/create" element={<CreateRecipePage />} />
-          </Routes>
-        </div>
-      </div>
+    <Toaster position="top-center" reverseOrder={false} />
+      <Routes>
+        {/* 1. The default landing page is now Login */}
+        <Route path="/" element={<Login />} />
+        
+        {/* 3. Main App Content - Keeping Liad's exact layout */}
+        <Route 
+          path="/home/*" 
+          element={
+            <div className="d-flex" style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+              <Sidebar />
+              <div className="flex-grow-1 overflow-auto" style={{ height: '100vh' }}>
+                <Routes>
+                  {/* When at /home, show HomePage */}
+                  <Route path="/" element={<HomePage />} />
+                  {/* When at /home/post/:id, show PostPage */}
+                  <Route path="post/:id" element={<PostPage />} />
+                </Routes>
+              </div>
+            </div>
+          } 
+        />
+
+        {/* 4. Redirect any unknown routes to Login */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </BrowserRouter>
   );
 }
