@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './components/HomePage';
 import Sidebar from './components/SideBar';
 import PostPage from './components/PostPage'; 
+import CreateRecipePage from './components/CreateRecipePage';
 import './App.css';
 
 function App() {
@@ -15,6 +16,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             {/* navigate to post page with dynamic id */}
             <Route path="/post/:id" element={<PostPage />} />
+            {/* navigate to create recipe page */}
+            <Route path="/create" element={<CreateRecipePage />} />
           </Routes>
         </div>
       </div>

@@ -15,9 +15,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const postModel_1 = __importDefault(require("../models/postModel"));
 const commentModel_1 = __importDefault(require("../models/commentModel"));
 const baseController_1 = __importDefault(require("./baseController"));
+const aiService_1 = require("../services/aiService");
 class PostsController extends baseController_1.default {
     constructor() {
         super(postModel_1.default);
+    }
+    analyze(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const nutritionData = yield (0, aiService_1.analyzeNutrition)(req.body);
+                res.status(200).json(nutritionData);
+            }
+            catch (err) {
+                res.status(500).json({ error: "Failed to analyze recipe" });
+            }
+        });
     }
     getAll(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -53,8 +65,31 @@ class PostsController extends baseController_1.default {
             create: { get: () => super.create }
         });
         return __awaiter(this, void 0, void 0, function* () {
+            if (req.file) {
+                req.body.imgUrl = req.file.path.replace(/\\/g, "/");
+            }
+            else if (!req.body.imgUrl) {
+                res.status(400).send("An image is required");
+                return;
+            }
+            // Parse JSON strings sent from FormData
+            try {
+                if (req.body.nutrition)
+                    req.body.nutrition = JSON.parse(req.body.nutrition);
+                if (req.body.ingredients)
+                    req.body.ingredients = JSON.parse(req.body.ingredients);
+                if (req.body.instructions)
+                    req.body.instructions = JSON.parse(req.body.instructions);
+            }
+            catch (err) {
+                console.error("Error parsing form data arrays", err);
+                res.status(400).send("Invalid data format");
+                return;
+            }
             if (req.user) {
-                req.body.owner = req.user._id; // Associate post with user ID from token
+                req.body.owner = req.user._id;
+                req.body.likes = [];
+                req.body.createdAt = new Date();
             }
             return _super.create.call(this, req, res);
         });
