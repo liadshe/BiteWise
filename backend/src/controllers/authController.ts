@@ -65,11 +65,11 @@ const login = async (req: Request, res: Response) => {
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
-            return sendError(401, "Invalid email or password 1", res);
+            return sendError(401, "Invalid email", res);
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return sendError(401, "Invalid email or password 2", res);
+            return sendError(401, "Invalid password", res);
         }
 
         const tokens = generateToken(user._id.toString());
@@ -115,9 +115,19 @@ const refreshToken = async (req: Request, res: Response) => {
     }
 };
 
+const getUserById = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id).select("-password -refreshTokens");
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 export default {
     register,
     login,
-    refreshToken
+    refreshToken,
+    getUserById
 };
