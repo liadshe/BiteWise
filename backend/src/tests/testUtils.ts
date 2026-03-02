@@ -53,7 +53,6 @@ export const getLoggedInUser = async (app: Express): Promise<UserData> => {
 }
 
 
-// 1. עדכנו את הטיפוס כדי שיתאים למודל החדש
 export type PostData = { 
     _id?: string,
     title: string,
@@ -65,7 +64,6 @@ export type PostData = {
     nutrition?: { calories: number, protein: number, suggestions: string } 
 };
 
-// 2. עדכנו את נתוני המוק (Mock) במערך
 export const postsList: PostData[] = [
     {
         title: "Test Pasta Recipe",

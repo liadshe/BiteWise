@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -6,31 +6,36 @@ import authService from '../services/authService';
 import logo from '../assets/logo.png';
 
 const Register = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
     const navigate = useNavigate();
+    const [preview, setPreview] = useState<string | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        }
+    };
 
     const onSubmit = async (data: any) => {
-        // שליחת הנתונים לשרת דרך ה-Service
-        const registerPromise = authService.register(data);
+        const formData = new FormData();
+        formData.append("username", data.username);
+        formData.append("email", data.email);
+        formData.append("password", data.password);
+        
+        if (data.image && data.image[0]) {
+            formData.append("image", data.image[0]); 
+        }
+
+        const registerPromise = authService.register(formData as any);
 
         toast.promise(registerPromise, {
             loading: 'Creating your account...',
-            success: (res: any) => {
-                // חילוץ הנתונים (מבנה דומה ללוגין: token ו-_id)
-                const userData = res.data || res;
-                
-                if (userData.token) {
-                    localStorage.setItem('token', userData.token);
-                    localStorage.setItem('userId', userData._id);
-                    navigate('/home');
-                    return 'Welcome to BiteWise! 🍳';
-                }
-                return 'Registered successfully! Please login.';
+            success: () => {
+                navigate('/home');
+                return 'Welcome to BiteWise! 🍳';
             },
-            error: (err) => {
-                const msg = err.response?.data?.message || "Registration failed. Try again.";
-                return msg;
-            }
+            error: (err) => err.response?.data?.message || "Registration failed"
         }, {
             style: { borderRadius: '10px', background: '#333', color: '#fff' },
             success: { duration: 4000, style: { background: '#f02d8e' } },
@@ -39,74 +44,85 @@ const Register = () => {
 
     return (
         <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-white">
-            <div className="text-center" style={{ width: '100%', maxWidth: '400px' }}>
+            <div className="text-center" style={{ width: '100%', maxWidth: '450px' }}>
                 
                 <div className="mb-4">
-                    <img src={logo} alt="BiteWise" style={{ width: '80px' }} />
-                    <h3 className="fw-bold mt-3">Join BiteWise</h3>
-                    <p className="text-secondary small">Start sharing your delicious recipes</p>
+                    <img src={logo} alt="BiteWise" style={{ width: '70px' }} />
+                    <h3 className="fw-bold mt-2">Create Account</h3>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="text-start">
-                    {/* Username Field */}
+                    
+                    <div className="text-center mb-4">
+                        <div className="position-relative d-inline-block">
+                            <img 
+                                src={preview || "https://ui-avatars.com/api/?name=User&background=random"} 
+                                alt="preview" 
+                                className="rounded-circle border shadow-sm"
+                                style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                            />
+                            <label htmlFor="imageUpload" className="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm">
+                                <i className="bi bi-camera"></i>
+                                <input 
+                                    type="file" 
+                                    id="imageUpload" 
+                                    hidden 
+                                    accept="image/*"
+                                    {...register("image", { onChange: handleImageChange })}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
                     <div className="mb-3">
                         <label className="form-label small fw-bold text-muted ms-1">Username</label>
                         <input 
                             type="text" 
-                            className={`form-control border-0 py-3 shadow-sm ${errors.username ? 'is-invalid' : ''}`}
-                            placeholder="Choose a username"
-                            style={{ backgroundColor: '#f8f9fa', borderRadius: '12px' }}
+                            className={`form-control border-0 py-2 shadow-sm ${errors.username ? 'is-invalid' : ''}`}
+                            placeholder="User123"
+                            style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}
                             {...register("username", { required: "Username is required" })}
                         />
                     </div>
 
-                    {/* Email Field */}
                     <div className="mb-3">
                         <label className="form-label small fw-bold text-muted ms-1">Email</label>
                         <input 
                             type="email" 
-                            className={`form-control border-0 py-3 shadow-sm ${errors.email ? 'is-invalid' : ''}`}
-                            placeholder="your@email.com"
-                            style={{ backgroundColor: '#f8f9fa', borderRadius: '12px' }}
+                            className={`form-control border-0 py-2 shadow-sm ${errors.email ? 'is-invalid' : ''}`}
+                            placeholder="mail@example.com"
+                            style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}
                             {...register("email", { required: "Email is required" })}
                         />
                     </div>
 
-                    {/* Password Field */}
-                    <div className="mb-3">
-    <label className="form-label small fw-bold text-muted ms-1">Password</label>
-    <input 
-        type="password" 
-        className={`form-control border-0 py-3 shadow-sm ${errors.password ? 'is-invalid' : ''}`}
-        placeholder="Create a password"
-        style={{ backgroundColor: '#f8f9fa', borderRadius: '12px' }}
-        {...register("password", { 
-            required: "Password is required", 
-            minLength: { value: 6, message: "Minimum 6 characters" } 
-        })}
-    />
-    {errors.password && <div className="invalid-feedback ms-1">{(errors.password as any).message}</div>}
-</div>
+                    <div className="row">
+                        <div className="col-md-6 mb-3">
+                            <label className="form-label small fw-bold text-muted ms-1">Password</label>
+                            <input 
+                                type="password" 
+                                className={`form-control border-0 py-2 shadow-sm ${errors.password ? 'is-invalid' : ''}`}
+                                style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}
+                                {...register("password", { required: "Required", minLength: 6 })}
+                            />
+                        </div>
+                        <div className="col-md-6 mb-4">
+                            <label className="form-label small fw-bold text-muted ms-1">Confirm</label>
+                            <input 
+                                type="password" 
+                                className={`form-control border-0 py-2 shadow-sm ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                                style={{ backgroundColor: '#f8f9fa', borderRadius: '10px' }}
+                                {...register("confirmPassword", { 
+                                    required: "Required",
+                                    validate: (val) => val === watch('password') || "No match"
+                                })}
+                            />
+                        </div>
+                    </div>
 
-{/* Confirm Password Field */}
-<div className="mb-4">
-    <label className="form-label small fw-bold text-muted ms-1">Confirm Password</label>
-    <input 
-        type="password" 
-        className={`form-control border-0 py-3 shadow-sm ${errors.confirmPassword ? 'is-invalid' : ''}`}
-        placeholder="Repeat your password"
-        style={{ backgroundColor: '#f8f9fa', borderRadius: '12px' }}
-        {...register("confirmPassword", { 
-            required: "Please confirm your password",
-            validate: (value, formValues) => value === formValues.password || "Passwords do not match"
-        })}
-    />
-    {errors.confirmPassword && <div className="invalid-feedback ms-1">{(errors.confirmPassword as any).message}</div>}
-</div>
-
-                    <button type="submit" className="btn w-100 py-3 text-white fw-bold shadow" 
+                    <button type="submit" className="btn w-100 py-3 text-white fw-bold shadow-sm" 
                             style={{ backgroundColor: '#f02d8e', borderRadius: '12px', border: 'none' }}>
-                        Create Account
+                        Sign Up
                     </button>
                 </form>
 

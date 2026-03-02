@@ -6,6 +6,10 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import authService from '../services/authService';
 
+// @ts-ignore
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const AUTH_URL = `${API_BASE_URL}/auth`;
+
 
 function Sidebar() {
     const [user, setUser] = useState<any>(null);
@@ -90,7 +94,11 @@ function Sidebar() {
             {/* user profile */}
             <div className="mt-auto border-top pt-3">
                 <div className="d-flex align-items-center p-2 mb-2 rounded" style={{ backgroundColor: '#fcf0f4' }}>
-                    <img src={user?.imgUrl || "https://ui-avatars.com/api/?name=User"} 
+                    <img src={
+                        user?.imgUrl 
+                        ? `${API_BASE_URL}/${user.imgUrl}` 
+                        : `https://ui-avatars.com/api/?name=${user?.username || 'User'}` 
+                        } 
                         alt="Profile" 
                         width="40" height="40" 
                         className="rounded-circle me-2" />

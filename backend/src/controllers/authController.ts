@@ -44,13 +44,20 @@ const register = async (req: Request, res: Response) => {
     }
     try {
         const existingUser = await User.findOne({ email });
+        const imgUrl = req.file ? req.file.path : "";
         if (existingUser) {
             return res.status(400).json({ message: "User with this email already exists" });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await User.create({ "email": email, "password": hashedPassword, "username": username });
+        const user = await User.create({
+            email,
+            password: hashedPassword,
+            username,
+            imgUrl: imgUrl 
+        });
+
         const tokens = generateToken(user._id.toString());
         user.refreshTokens.push(tokens.refreshToken);
         await user.save();
