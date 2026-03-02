@@ -37,14 +37,17 @@ const generateToken = (userId: string): GeneratedTokens => {
 }
 
 const register = async (req: Request, res: Response) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const username = req.body.username;
+    const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
         return sendError(400, "Email, password and username are required", res);
     }
     try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const user = await User.create({ "email": email, "password": hashedPassword, "username": username });

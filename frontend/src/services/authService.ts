@@ -38,6 +38,7 @@ const register = async (userData: RegisterData): Promise<AuthResponse> => {
     if (response.data.token) {
         localStorage.setItem('accessToken', response.data.token);
         localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('userId', response.data._id); 
     }
 
     return response.data;
