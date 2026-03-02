@@ -38,7 +38,7 @@ function PostCard({ id, title, description, cuisine, calories, protein, imageUrl
         <div 
             className="card h-100 border-0 shadow-sm post-card-hover" 
             style={{ borderRadius: '16px', overflow: 'hidden', cursor: 'pointer' }} 
-            onClick={() => navigate(`/post/${id}`)}
+            onClick={() => navigate(`/home/post/${id}`)}
         >
             {/* owner details */}
             <div className="card-body d-flex align-items-center pb-2">
