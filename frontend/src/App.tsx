@@ -25,9 +25,9 @@ function App() {
               <div className="flex-grow-1 overflow-auto" style={{ height: '100vh' }}>
                 <Routes>
                   {/* When at /home, show HomePage */}
-                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/" element={<HomePage />} />
                   {/* When at /home/post/:id, show PostPage */}
-                  <Route path="/home/post/:id" element={<PostPage />} />
+                  <Route path="/post/:id" element={<PostPage />} />
                 </Routes>
               </div>
             </div>

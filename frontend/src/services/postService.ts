@@ -9,18 +9,29 @@ export const getPosts = async (page?: number, cuisine?: string, search?: string)
     if (cuisine && cuisine !== 'All') params.cuisine = cuisine;
     if (search) params.search = search;
 
-    const response = await axios.get(API_URL, { params });
+    const token = localStorage.getItem('accessToken'); 
+    
+    const response = await axios.get(API_URL, { 
+        params,
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     return response.data;
 }
 
 export const getPostById = async (id: string) => {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const token = localStorage.getItem('accessToken');
+    const response = await axios.get(`${API_URL}/${id}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     return response.data;
 }
 
 export const toggleLike = async (postId: string) => {
-    // get token to authenticate the request
-    const token = localStorage.getItem('token');     
+    const token = localStorage.getItem('accessToken'); // שיניתי מ-'token' ל-'accessToken'
     const response = await axios.post(`${API_URL}/${postId}/like`, {}, {
         headers: {
             'Authorization': `Bearer ${token}`
@@ -30,12 +41,11 @@ export const toggleLike = async (postId: string) => {
 }
 
 export const createPost = async (postData: FormData) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken'); // שיניתי מ-'token' ל-'accessToken'
     
     const response = await fetch(`${API_URL}`, { 
         method: 'POST',
         headers: {
-            // DO NOT set 'Content-Type' here. The browser handles it for FormData.
             'Authorization': `Bearer ${token}`
         },
         body: postData,
@@ -49,7 +59,7 @@ export const createPost = async (postData: FormData) => {
 };
 
 export const analyzeRecipe = async (recipeData: any) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     
     const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',

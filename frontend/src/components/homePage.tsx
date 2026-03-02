@@ -11,7 +11,7 @@ function HomePage() {
     const [authMessage, setAuthMessage] = useState<string | null>(null);
     const cuisines = ['All', 'Italian', 'Mediterranean', 'Asian', 'Mexican', 'American'];
 
-   // Fetching Data
+    // Fetching Data
     useEffect(() => {
         const fetchPosts = async () => {
             setIsLoading(true);
@@ -20,7 +20,6 @@ function HomePage() {
             try {
                 const selectedCuisine = cuisineFilter === 'All' ? '' : cuisineFilter;
                 const data = await getPosts(1, selectedCuisine, searchQuery); 
-                
                 // get userId from localStorage
                 const currentUserId = localStorage.getItem('userId');
 

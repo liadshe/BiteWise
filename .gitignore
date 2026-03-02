@@ -1,5 +1,4 @@
 node_modules/
 coverage/
 .env.*
-SeedPosts.ts
-SeedUsers.ts
+scripts/

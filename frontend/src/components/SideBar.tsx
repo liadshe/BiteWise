@@ -44,7 +44,7 @@ function Sidebar() {
     return (
         <div className="d-flex flex-column p-3 bg-white border-end" style={{ width: '280px', height: '100vh', position: 'sticky', top: 0 }}>
             {/* logo */}
-            <Link to="/" className="d-flex align-items-center mb-4 text-decoration-none">
+            <Link to="/home" className="d-flex align-items-center mb-4 text-decoration-none">
               <img src={logoImg} alt="BiteWise Logo" width="60" className="me-2" />
             </Link>
 
