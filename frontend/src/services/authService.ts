@@ -55,13 +55,23 @@ const getUserById = async (id: string) => {
     const response = await axios.get(`${AUTH_URL}/${id}`);
     return response.data;
 };
+const googleLogin = async (credential: string) => {
+    const response = await axios.post(`${API_BASE_URL}/auth/google`, { credential });    
+
+    if (response.data.accessToken) {
+        localStorage.setItem('accessToken', response.data.accessToken);
+        localStorage.setItem('userId', response.data._id);
+    }
+    return response.data;
+};
 
 const authService = {
     login,
     register,
     logout,
     isLoggedIn,
-    getUserById
+    getUserById,
+    googleLogin
 };
 
 export default authService;

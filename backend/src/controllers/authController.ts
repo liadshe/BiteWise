@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/userModel";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const sendError = (code: number, message: string, res: Response) => {
     res.status(code).json({ message });
@@ -92,9 +95,46 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
-//refresh token function to be implemented
+const googleLogin = async (req: Request, res: Response) => {
+    const { credential } = req.body;
+    try {
+        console.log("מנסה לאמת טוקן עם Client ID:", process.env.GOOGLE_CLIENT_ID);
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            return sendError(400, "Invalid Google token", res);
+        }
+
+        let user = await User.findOne({ email: payload.email });
+
+        if (!user) {
+            user = await User.create({
+                email: payload.email,
+                username: payload.name || payload.email,
+                password: "google-auth-" + Math.random().toString(36).slice(-8),
+                imgUrl: payload.picture || ""
+            });
+        }
+
+        const tokens = generateToken(user._id.toString());
+        user.refreshTokens.push(tokens.refreshToken);
+        await user.save();
+        
+        res.status(200).json({ 
+            token: tokens.token, 
+            refreshToken: tokens.refreshToken, 
+            _id: user._id 
+        });
+    } catch (err) {
+        console.error("שגיאת אימות גוגל מפורטת:", err); // זה ידפיס לך בטרמינל למה זה נכשל
+        return sendError(400, "Google authentication failed", res);
+    }
+};
+
 const refreshToken = async (req: Request, res: Response) => {
-    // Refresh token logic here
     const refreshToken = req.body.refreshToken;
     if (!refreshToken) {
         return sendError(400, "Refresh token is required", res);
@@ -106,16 +146,13 @@ const refreshToken = async (req: Request, res: Response) => {
         if (!user) {
             return sendError(401, "Invalid refresh token", res);
         }
-        // Check if the refresh token exists in the user's refreshTokens array
         if (!user.refreshTokens.includes(refreshToken)) {
-            //clear the refresh tokens array and save
             user.refreshTokens = [];
             await user.save();
             console.log(" **** Possible token theft for user:", user._id);
             return sendError(401, "Invalid refresh token", res);
         }
         const tokens = generateToken(decoded._id);
-        //remove old token from user refreshTokens and add the new one
         user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
         user.refreshTokens.push(tokens.refreshToken);
         await user.save();
@@ -138,6 +175,7 @@ const getUserById = async (req: Request, res: Response) => {
 export default {
     register,
     login,
+    googleLogin,
     refreshToken,
     getUserById
 };

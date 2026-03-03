@@ -96,15 +96,22 @@ function Sidebar() {
                 <div className="d-flex align-items-center p-2 mb-2 rounded" style={{ backgroundColor: '#fcf0f4' }}>
                     <img src={
                         user?.imgUrl 
-                        ? `${API_BASE_URL}/${user.imgUrl}` 
-                        : `https://ui-avatars.com/api/?name=${user?.username || 'User'}` 
+                            ? (user.imgUrl.startsWith('http') 
+                                ? user.imgUrl  
+                                : `${API_BASE_URL}/${user.imgUrl.startsWith('/') ? user.imgUrl.slice(1) : user.imgUrl}`) 
+                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}&background=f02d8e&color=fff&bold=true` 
                         } 
                         alt="Profile" 
                         width="40" height="40" 
-                        className="rounded-circle me-2" />
-                    <div>
-                        <h6 className="mb-0 fw-bold">{user?.username}</h6>
-                        <small className="text-muted">@{user?.email?.toLowerCase()}</small>
+                        className="rounded-circle me-2 shadow-sm"
+                        style={{ objectFit: 'cover' }} 
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}&background=f02d8e&color=fff`;
+                        }}
+                    />
+                    <div className="overflow-hidden">
+                        <h6 className="mb-0 fw-bold text-truncate" title={user?.username}>{user?.username}</h6>
+                        <small className="text-muted text-truncate d-block">@{user?.email?.split('@')[0]}</small>
                     </div>
                 </div>
                 <button onClick={handleLogout} className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" style={{ borderRadius: '12px' }}>
