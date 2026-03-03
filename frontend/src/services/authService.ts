@@ -26,19 +26,19 @@ const login = async (email: string, password: string): Promise<AuthResponse> => 
     if (response.data.token) {
         localStorage.setItem('accessToken', response.data.token);
         localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('userId', response.data._id); 
     }
 
     return response.data;
 };
 
-const register = async (userData: RegisterData): Promise<AuthResponse> => {
-    const response = await axios.post<AuthResponse>(`${AUTH_URL}/register`, userData);
+const register = async (formData: FormData): Promise<AuthResponse> => {
+    const response = await axios.post<AuthResponse>(`${AUTH_URL}/register`, formData);
     
     if (response.data.token) {
         localStorage.setItem('accessToken', response.data.token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('userId', response.data._id);
     }
-
     return response.data;
 };
 
@@ -51,11 +51,17 @@ const isLoggedIn = () => {
     return localStorage.getItem('accessToken') !== null;
 };
 
+const getUserById = async (id: string) => {
+    const response = await axios.get(`${AUTH_URL}/${id}`);
+    return response.data;
+};
+
 const authService = {
     login,
     register,
     logout,
-    isLoggedIn
+    isLoggedIn,
+    getUserById
 };
 
 export default authService;

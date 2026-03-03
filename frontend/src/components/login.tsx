@@ -10,31 +10,30 @@ const Login = () => {
     const navigate = useNavigate();
     
     const onSubmit = async (data: any) => {
-        const loginPromise = authService.login(data.email, data.password);
+    const loginPromise = authService.login(data.email, data.password);
 
-        toast.promise(loginPromise, {
-            loading: 'Logging in...',
-            success: () => {
+    toast.promise(loginPromise, {
+        loading: 'Logging in...',
+        success: (res: any) => {
+            const token = res.token;
+            const userId = res._id;
+            
+            if (token && userId) {
+                localStorage.setItem('token', token);
+                localStorage.setItem('userId', userId); 
                 navigate('/home');
                 return 'Welcome back to BiteWise! 🍳';
-            },
-            error: (err) => {
-                return "Login failed: Invalid email or password";
-            },
-        }, {
-            style: {
-                borderRadius: '10px',
-                background: '#333',
-                color: '#fff',
-            },
-            success: {
-                duration: 4000,
-                style: {
-                    background: '#f02d8e',
-                },
-            },
-        });
-    };
+            }
+            throw new Error("Missing data from server");
+        },
+        error: (err) => {
+            return err.response?.data?.message || "Login failed";
+        },
+    }, {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' },
+        success: { duration: 4000, style: { background: '#f02d8e' } },
+    });
+};
 
     return (
         <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-white"> 

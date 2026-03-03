@@ -7,16 +7,16 @@ import PostPage from './components/PostPage';
 import Login from './components/Login';
 import CreateRecipePage from './components/CreateRecipePage';
 import './App.css';
+import Register from './components/Register';
 
 function App() {
   return (
     <BrowserRouter>
     <Toaster position="top-center" reverseOrder={false} />
       <Routes>
-        {/* 1. The default landing page is now Login */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         
-        {/* 3. Main App Content - Keeping Liad's exact layout */}
         <Route 
           path="/home/*" 
           element={
@@ -27,7 +27,7 @@ function App() {
                   {/* When at /home, show HomePage */}
                   <Route path="/" element={<HomePage />} />
                   {/* When at /home/post/:id, show PostPage */}
-                  <Route path="post/:id" element={<PostPage />} />
+                  <Route path="/post/:id" element={<PostPage />} />
                 </Routes>
               </div>
             </div>

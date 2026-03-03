@@ -37,17 +37,27 @@ const generateToken = (userId: string): GeneratedTokens => {
 }
 
 const register = async (req: Request, res: Response) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    const username = req.body.username;
+    const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
         return sendError(400, "Email, password and username are required", res);
     }
     try {
+        const existingUser = await User.findOne({ email });
+        const imgUrl = req.file ? req.file.path : "";
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
+        }
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await User.create({ "email": email, "password": hashedPassword, "username": username });
+        const user = await User.create({
+            email,
+            password: hashedPassword,
+            username,
+            imgUrl: imgUrl 
+        });
+
         const tokens = generateToken(user._id.toString());
         user.refreshTokens.push(tokens.refreshToken);
         await user.save();
@@ -65,11 +75,11 @@ const login = async (req: Request, res: Response) => {
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
-            return sendError(401, "Invalid email or password 1", res);
+            return sendError(401, "Invalid email", res);
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return sendError(401, "Invalid email or password 2", res);
+            return sendError(401, "Invalid password", res);
         }
 
         const tokens = generateToken(user._id.toString());
@@ -115,9 +125,19 @@ const refreshToken = async (req: Request, res: Response) => {
     }
 };
 
+const getUserById = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id).select("-password -refreshTokens");
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 export default {
     register,
     login,
-    refreshToken
+    refreshToken,
+    getUserById
 };
