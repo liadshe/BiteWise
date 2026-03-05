@@ -72,13 +72,25 @@ const googleLogin = async (credential: string) => {
     return response.data;
 };
 
+export const updateUser = async (userId: string, formData: FormData) => {
+    const token = localStorage.getItem('accessToken');
+    const response = await axios.put(`http://localhost:3000/user/${userId}`, formData, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
+
 const authService = {
     login,
     register,
     logout,
     isLoggedIn,
     getUserById,
-    googleLogin
+    googleLogin,
+    updateUser
 };
 
 export default authService;

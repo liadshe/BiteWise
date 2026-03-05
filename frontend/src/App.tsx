@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import HomePage from './components/homePage';
@@ -7,8 +6,10 @@ import PostPage from './components/PostPage';
 import Login from './components/login';
 import CreateRecipePage from './components/CreateRecipePage';
 import EditPostPage from './components/EditPostPage';
-import './App.css';
 import Register from './components/Register';
+import ProfilePage from './components/ProfilePage';
+import './App.css';
+
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
                   <Route path="/create" element={<CreateRecipePage />} />
                   {/* When at /home/edit/:id, show EditPostPage */}
                   <Route path="/edit/:id" element={<EditPostPage />} />
+                  {/* When at /home/profile/:id, show ProfilePage (to be implemented) */}
+                  <Route path="/profile" element={<ProfilePage />} />
                 </Routes>
               </div>
             </div>

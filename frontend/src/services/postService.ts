@@ -30,6 +30,17 @@ export const getPostById = async (id: string) => {
     return response.data;
 }
 
+export const getPostsByUserId = async (userId: string) => {
+    const token = localStorage.getItem('accessToken');
+    const response = await axios.get(`${API_URL}/user/${userId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    return response.data;
+}
+
+
 export const toggleLike = async (postId: string) => {
     const token = localStorage.getItem('accessToken'); // שיניתי מ-'token' ל-'accessToken'
     const response = await axios.post(`${API_URL}/${postId}/like`, {}, {
