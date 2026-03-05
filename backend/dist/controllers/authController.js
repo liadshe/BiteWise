@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const google_auth_library_1 = require("google-auth-library");
+const client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const sendError = (code, message, res) => {
     res.status(code).json({ message });
 };
@@ -29,16 +31,24 @@ const generateToken = (userId) => {
     return { token, refreshToken };
 };
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
-    const password = req.body.password;
-    const username = req.body.username;
+    const { email, password, username } = req.body;
     if (!email || !password || !username) {
         return sendError(400, "Email, password and username are required", res);
     }
     try {
+        const existingUser = yield userModel_1.default.findOne({ email });
+        const imgUrl = req.file ? req.file.path : "";
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
+        }
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashedPassword = yield bcrypt_1.default.hash(password, salt);
-        const user = yield userModel_1.default.create({ "email": email, "password": hashedPassword, "username": username });
+        const user = yield userModel_1.default.create({
+            email,
+            password: hashedPassword,
+            username,
+            imgUrl: imgUrl
+        });
         const tokens = generateToken(user._id.toString());
         user.refreshTokens.push(tokens.refreshToken);
         yield user.save();
@@ -57,24 +67,59 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const user = yield userModel_1.default.findOne({ email: email });
         if (!user) {
-            return sendError(401, "Invalid email or password 1", res);
+            return sendError(401, "Invalid email", res);
         }
         const isMatch = yield bcrypt_1.default.compare(password, user.password);
         if (!isMatch) {
-            return sendError(401, "Invalid email or password 2", res);
+            return sendError(401, "Invalid password", res);
         }
         const tokens = generateToken(user._id.toString());
         user.refreshTokens.push(tokens.refreshToken);
         yield user.save();
-        res.status(200).json(Object.assign(Object.assign({}, tokens), { _id: user._id }));
+        res.status(200).json(Object.assign(Object.assign({}, tokens), { _id: user._id, username: user.username, imgUrl: user.imgUrl }));
     }
     catch (err) {
         return sendError(500, "Internal server error", res);
     }
 });
-//refresh token function to be implemented
+const googleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { credential } = req.body;
+    try {
+        console.log("מנסה לאמת טוקן עם Client ID:", process.env.GOOGLE_CLIENT_ID);
+        const ticket = yield client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            return sendError(400, "Invalid Google token", res);
+        }
+        let user = yield userModel_1.default.findOne({ email: payload.email });
+        if (!user) {
+            user = yield userModel_1.default.create({
+                email: payload.email,
+                username: payload.name || payload.email,
+                password: "google-auth-" + Math.random().toString(36).slice(-8),
+                imgUrl: payload.picture || ""
+            });
+        }
+        const tokens = generateToken(user._id.toString());
+        user.refreshTokens.push(tokens.refreshToken);
+        yield user.save();
+        res.status(200).json({
+            accessToken: tokens.token,
+            refreshToken: tokens.refreshToken,
+            _id: user._id,
+            username: user.username,
+            imgUrl: user.imgUrl
+        });
+    }
+    catch (err) {
+        console.error("שגיאת אימות גוגל מפורטת:", err); // זה ידפיס לך בטרמינל למה זה נכשל
+        return sendError(400, "Google authentication failed", res);
+    }
+});
 const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Refresh token logic here
     const refreshToken = req.body.refreshToken;
     if (!refreshToken) {
         return sendError(400, "Refresh token is required", res);
@@ -86,16 +131,13 @@ const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if (!user) {
             return sendError(401, "Invalid refresh token", res);
         }
-        // Check if the refresh token exists in the user's refreshTokens array
         if (!user.refreshTokens.includes(refreshToken)) {
-            //clear the refresh tokens array and save
             user.refreshTokens = [];
             yield user.save();
             console.log(" **** Possible token theft for user:", user._id);
             return sendError(401, "Invalid refresh token", res);
         }
         const tokens = generateToken(decoded._id);
-        //remove old token from user refreshTokens and add the new one
         user.refreshTokens = user.refreshTokens.filter(token => token !== refreshToken);
         user.refreshTokens.push(tokens.refreshToken);
         yield user.save();
@@ -105,9 +147,22 @@ const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return sendError(401, "Invalid refresh token", res);
     }
 });
+const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield userModel_1.default.findById(req.params.id).select("-password -refreshTokens");
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    }
+    catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
 exports.default = {
     register,
     login,
-    refreshToken
+    googleLogin,
+    refreshToken,
+    getUserById
 };
 //# sourceMappingURL=authController.js.map

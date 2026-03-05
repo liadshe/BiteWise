@@ -4,14 +4,12 @@ import { authenticate} from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// get all comments
-router.get("/", commentsController.getAll.bind(commentsController));
+// get all comments by post id
+router.get("/", commentsController.getCommentsByPostId.bind(commentsController));
 
 // get comment by id
 router.get("/:id", commentsController.getById.bind(commentsController));
 
-// get comments by postId
-router.get("/:postId", commentsController.getCommentsByPostId.bind(commentsController));
 
 // add new comment
 router.post("/", authenticate, commentsController.create.bind(commentsController));

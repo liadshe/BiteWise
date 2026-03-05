@@ -7,12 +7,10 @@ const express_1 = __importDefault(require("express"));
 const commentController_1 = __importDefault(require("../controllers/commentController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
-// get all comments
-router.get("/", commentController_1.default.getAll.bind(commentController_1.default));
+// get all comments by post id
+router.get("/", commentController_1.default.getCommentsByPostId.bind(commentController_1.default));
 // get comment by id
 router.get("/:id", commentController_1.default.getById.bind(commentController_1.default));
-// get comments by postId
-router.get("/:postId", commentController_1.default.getCommentsByPostId.bind(commentController_1.default));
 // add new comment
 router.post("/", authMiddleware_1.authenticate, commentController_1.default.create.bind(commentController_1.default));
 // delete comment by id
