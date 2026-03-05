@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toggleLike, getPostById } from '../services/postService';
 import { getCommentsByPostId, addComment } from '../services/commentService';
 
+
+// @ts-ignore
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 function PostPage() {
     const { id } = useParams<{ id: string }>(); 
     const navigate = useNavigate(); 
@@ -39,10 +44,10 @@ function PostPage() {
     const handleLike = async () => {
         if (!post || !id) return;
         
-        const token = localStorage.getItem('token'); 
+        const accessToken = localStorage.getItem('accessToken'); 
         const userId = localStorage.getItem('userId');
 
-        if (!token) {
+        if (!accessToken) {
             setToastMessage("You need to be logged in to like a recipe!");
             setTimeout(() => setToastMessage(null), 3000);
             return;
@@ -65,9 +70,9 @@ function PostPage() {
         e.preventDefault();
         if (!newComment.trim() || !id) return;
 
-        const token = localStorage.getItem('token'); 
+        const accessToken = localStorage.getItem('accessToken'); 
 
-        if (!token) {
+        if (!accessToken) {
             setToastMessage("You need to be logged in to post a comment!");
             setTimeout(() => setToastMessage(null), 3000);
             return;
@@ -76,7 +81,7 @@ function PostPage() {
         try {
             const addedComment = await addComment(id, newComment);
             const currentUsername = localStorage.getItem('username') || 'Me';
-            const currentAvatar = `https://ui-avatars.com/api/?name=${currentUsername}&background=random`;
+            const currentAvatar = localStorage.getItem('imgUrl') || 'default-avatar.png';
             
             const commentForDisplay = {
                 ...addedComment,
@@ -93,15 +98,16 @@ function PostPage() {
         }
     };
 
-    const getImageUrl = (url: string) => {
-        if (!url) return '';
-        if (url.startsWith('http')) return url;
-        let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-        if (!cleanUrl.startsWith('uploads/')) {
-            cleanUrl = `uploads/${cleanUrl}`;
-        }
-        return `http://localhost:3000/${cleanUrl}`;
-    };
+    const getImageUrl = (url: string | undefined) => {
+    if (!url) return '/default-avatar.png'; // fallback if user has no image at all
+    if (url.startsWith('http')) return url; // handles Google Auth images
+    
+    let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    if (!cleanUrl.startsWith('uploads/')) {
+        cleanUrl = `uploads/${cleanUrl}`;
+    }
+    return `${API_BASE_URL}/${cleanUrl}`;
+};
 
     return (
         <div className="container py-4" style={{ maxWidth: '1100px' }}>
@@ -123,7 +129,7 @@ function PostPage() {
                 
                 <div className="d-flex align-items-center text-muted">
                     <img 
-                        src={post.owner?.imgUrl || `https://ui-avatars.com/api/?name=${post.owner?.username || 'User'}&background=random`} 
+                        src={getImageUrl(post.owner?.imgUrl) || 'default-avatar.png'} 
                         alt="Author" 
                         className="rounded-circle object-fit-cover me-2 shadow-sm" 
                         width="35" height="35" 
@@ -257,11 +263,11 @@ function PostPage() {
                 
                 <form onSubmit={handleAddComment} className="mb-5 d-flex gap-3">
                     <img 
-                        src={`https://ui-avatars.com/api/?name=${localStorage.getItem('username') || 'Me'}&background=random`} 
-                        alt="You" 
-                        className="rounded-circle object-fit-cover shadow-sm" 
-                        width="45" height="45" 
-                    />
+                    src={getImageUrl(localStorage.getItem('imgUrl') || '')} 
+                    alt="You" 
+                    className="rounded-circle object-fit-cover shadow-sm" 
+                    width="45" height="45" 
+                />
                     <div className="flex-grow-1">
                         <textarea 
                             className="form-control bg-light border-0 shadow-sm p-3 mb-2" 
@@ -284,18 +290,24 @@ function PostPage() {
                         <p className="text-muted text-center py-4 bg-light rounded-4 border border-light">No comments yet. Be the first to review this recipe!</p>
                     ) : (
                         comments.map((comment: any, index: number) => {
-                            const dateStr = comment.createdAt 
-                                ? new Date(comment.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
-                                : 'Just now';
+                        const dateStr = comment.createdAt 
+                        ? new Date(comment.createdAt).toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',  
+                        minute: '2-digit'  
+                        }) 
+                        : 'Just now';
 
                             return (
                                 <div key={index} className="d-flex gap-3">
                                     <img 
-                                        src={comment.owner?.imgUrl || `https://ui-avatars.com/api/?name=${comment.owner?.username || 'User'}&background=random`} 
-                                        alt="avatar" 
-                                        className="rounded-circle object-fit-cover shadow-sm mt-1" 
-                                        width="45" height="45" 
-                                    />
+                                    src={getImageUrl(comment.owner?.imgUrl) || 'default-avatar.png'} 
+                                    alt="avatar" 
+                                    className="rounded-circle object-fit-cover shadow-sm mt-1" 
+                                    width="45" height="45" 
+                                />
                                     <div className="flex-grow-1 bg-light p-3 rounded-4 border border-light">
                                         <div className="d-flex justify-content-between align-items-center mb-2">
                                             <h6 className="mb-0 fw-bold text-dark">{comment.owner?.username || "Unknown User"}</h6>

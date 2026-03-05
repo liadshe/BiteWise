@@ -26,7 +26,7 @@ class BaseController {
                 // if paging is needed, calculate skip and limit
                 if (req.query.page) {
                     const page = parseInt(req.query.page) || 1;
-                    const limit = parseInt(req.query.limit) || 10; // ברירת מחדל: 10 פוסטים בעמוד
+                    const limit = parseInt(req.query.limit) || 10;
                     const skip = (page - 1) * limit;
                     query = query.skip(skip).limit(limit);
                 }

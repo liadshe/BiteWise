@@ -88,7 +88,7 @@ const login = async (req: Request, res: Response) => {
         const tokens = generateToken(user._id.toString());
         user.refreshTokens.push(tokens.refreshToken);
         await user.save();
-        res.status(200).json({ ...tokens, _id: user._id });
+        res.status(200).json({ ...tokens, _id: user._id, username: user.username, imgUrl: user.imgUrl });
 
     } catch (err) {
         return sendError(500, "Internal server error", res);
@@ -124,9 +124,11 @@ const googleLogin = async (req: Request, res: Response) => {
         await user.save();
         
         res.status(200).json({ 
-            token: tokens.token, 
+            accessToken: tokens.token, 
             refreshToken: tokens.refreshToken, 
-            _id: user._id 
+            _id: user._id,
+            username: user.username,
+            imgUrl: user.imgUrl
         });
     } catch (err) {
         console.error("שגיאת אימות גוגל מפורטת:", err); // זה ידפיס לך בטרמינל למה זה נכשל

@@ -9,7 +9,7 @@ export const getCommentsByPostId = async (postId: string) => {
 }
 
 export const addComment = async (postId: string, content: string) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     const response = await axios.post(API_URL, 
         { postId, content }, 
         { headers: { 'Authorization': `Bearer ${token}` } }

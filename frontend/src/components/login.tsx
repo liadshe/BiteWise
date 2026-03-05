@@ -18,6 +18,9 @@ const Login = () => {
             success: (res: any) => {
                 localStorage.setItem('accessToken', res.accessToken);
                 localStorage.setItem('userId', res._id); 
+                localStorage.setItem('username', res.username);
+                localStorage.setItem('imgUrl', res.imgUrl);
+                
                 navigate('/home');
                 return 'Welcome back! 🍳';
             },
@@ -36,10 +39,12 @@ const Login = () => {
             success: (res: any) => {
                 const token = res.token;
                 const userId = res._id;
+                const username = res.username;
                 
                 if (token && userId) {
-                    localStorage.setItem('token', token);
+                    localStorage.setItem('accessToken', token);
                     localStorage.setItem('userId', userId); 
+                    localStorage.setItem('username', username);
                     navigate('/home');
                     return 'Welcome back to BiteWise! 🍳';
                 }

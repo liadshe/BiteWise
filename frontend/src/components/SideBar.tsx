@@ -41,6 +41,18 @@ function Sidebar() {
 
     const isActive = (path: string) => location.pathname === path;
 
+
+    const getImageUrl = (url: string | undefined) => {
+    if (!url) return '/default-avatar.png'; // fallback if user has no image at all
+    if (url.startsWith('http')) return url; // handles Google Auth images
+    
+    let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    if (!cleanUrl.startsWith('uploads/')) {
+        cleanUrl = `uploads/${cleanUrl}`;
+    }
+    return `${API_BASE_URL}/${cleanUrl}`;
+};
+
     return (
         <div className="d-flex flex-column p-3 bg-white border-end" style={{ width: '280px', height: '100vh', position: 'sticky', top: 0 }}>
             {/* logo */}
@@ -94,21 +106,17 @@ function Sidebar() {
             {/* user profile */}
             <div className="mt-auto border-top pt-3">
                 <div className="d-flex align-items-center p-2 mb-2 rounded" style={{ backgroundColor: '#fcf0f4' }}>
-                    <img src={
-                        user?.imgUrl 
-                            ? (user.imgUrl.startsWith('http') 
-                                ? user.imgUrl  
-                                : `${API_BASE_URL}/${user.imgUrl.startsWith('/') ? user.imgUrl.slice(1) : user.imgUrl}`) 
-                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}&background=f02d8e&color=fff&bold=true` 
-                        } 
-                        alt="Profile" 
-                        width="40" height="40" 
-                        className="rounded-circle me-2 shadow-sm"
-                        style={{ objectFit: 'cover' }} 
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.username || 'User')}&background=f02d8e&color=fff`;
-                        }}
-                    />
+                <img 
+                    src={getImageUrl(user?.imgUrl)} 
+                    alt="Profile" 
+                    width="40" height="40" 
+                    className="rounded-circle me-2 shadow-sm"
+                    style={{ objectFit: 'cover' }} 
+                    onError={(e) => {
+                        // Fallback if the image link is broken
+                        (e.target as HTMLImageElement).src = '/default-avatar.png'; 
+                    }}
+                />
                     <div className="overflow-hidden">
                         <h6 className="mb-0 fw-bold text-truncate" title={user?.username}>{user?.username}</h6>
                         <small className="text-muted text-truncate d-block">@{user?.email?.split('@')[0]}</small>

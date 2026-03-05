@@ -49,7 +49,6 @@ const getLoggedInUser = (app) => __awaiter(void 0, void 0, void 0, function* () 
     };
 });
 exports.getLoggedInUser = getLoggedInUser;
-// 2. עדכנו את נתוני המוק (Mock) במערך
 exports.postsList = [
     {
         title: "Test Pasta Recipe",

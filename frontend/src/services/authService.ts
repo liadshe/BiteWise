@@ -8,6 +8,8 @@ interface AuthResponse {
     token: string;
     refreshToken: string;
     _id: string;
+    username: string;
+    imgUrl?: string;
 }
 
 interface RegisterData {
@@ -27,6 +29,9 @@ const login = async (email: string, password: string): Promise<AuthResponse> => 
         localStorage.setItem('accessToken', response.data.token);
         localStorage.setItem('refreshToken', response.data.refreshToken);
         localStorage.setItem('userId', response.data._id); 
+        localStorage.setItem('username', response.data.username);
+        localStorage.setItem('imgUrl', response.data.imgUrl || '');
+
     }
 
     return response.data;
@@ -61,6 +66,8 @@ const googleLogin = async (credential: string) => {
     if (response.data.accessToken) {
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('userId', response.data._id);
+        localStorage.setItem('username', response.data.username);
+        localStorage.setItem('imgUrl', response.data.imgUrl || '');
     }
     return response.data;
 };
