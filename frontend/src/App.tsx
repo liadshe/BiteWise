@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import HomePage from './components/HomePage';
+import HomePage from './components/homePage';
 import Sidebar from './components/SideBar';
 import PostPage from './components/PostPage'; 
-import Login from './components/Login';
+import Login from './components/login';
 import CreateRecipePage from './components/CreateRecipePage';
+import EditPostPage from './components/EditPostPage';
 import './App.css';
 import Register from './components/Register';
 
@@ -28,6 +29,10 @@ function App() {
                   <Route path="/" element={<HomePage />} />
                   {/* When at /home/post/:id, show PostPage */}
                   <Route path="/post/:id" element={<PostPage />} />
+                  {/* When at /home/create, show CreateRecipePage */}
+                  <Route path="/create" element={<CreateRecipePage />} />
+                  {/* When at /home/edit/:id, show EditPostPage */}
+                  <Route path="/edit/:id" element={<EditPostPage />} />
                 </Routes>
               </div>
             </div>

@@ -73,3 +73,30 @@ export const analyzeRecipe = async (recipeData: any) => {
     if (!response.ok) throw new Error('Failed to analyze recipe');
     return await response.json();
 };
+
+export const updatePost = async (id: string, postData: FormData) => {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: postData, // FormData handles its own Content-Type boundaries automatically
+    });
+
+    if (!response.ok) throw new Error('Failed to update recipe');
+    return await response.json();
+};
+
+export const deletePost = async (id: string) => {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!response.ok) throw new Error('Failed to delete recipe');
+    return await response.json();
+};

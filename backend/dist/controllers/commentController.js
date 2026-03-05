@@ -36,7 +36,8 @@ class CommentsController extends baseController_1.default {
             del: { get: () => super.del }
         });
         return __awaiter(this, void 0, void 0, function* () {
-            const id = req.params.id;
+            const authReq = req;
+            const id = authReq.params.id;
             try {
                 const comment = yield this.model.findById(id);
                 if (!comment) {
@@ -44,13 +45,12 @@ class CommentsController extends baseController_1.default {
                     return;
                 }
                 // Check if the authenticated user is the creator of the comment
-                if (req.user && comment.owner.toString() === req.user._id) {
+                // FIX: Added .toString() to authReq.user._id
+                if (authReq.user && comment.owner.toString() === authReq.user._id.toString()) {
                     _super.del.call(this, req, res);
-                    return;
                 }
                 else {
                     res.status(403).send("Forbidden: You are not the creator of this comment");
-                    return;
                 }
             }
             catch (err) {
@@ -65,7 +65,8 @@ class CommentsController extends baseController_1.default {
             update: { get: () => super.update }
         });
         return __awaiter(this, void 0, void 0, function* () {
-            const id = req.params.id;
+            const authReq = req;
+            const id = authReq.params.id;
             try {
                 const comment = yield this.model.findById(id);
                 if (!comment) {
@@ -73,17 +74,16 @@ class CommentsController extends baseController_1.default {
                     return;
                 }
                 // Check if the authenticated user is the creator of the comment
-                if (!req.user || comment.owner.toString() !== req.user._id) {
+                // FIX: Added .toString() to authReq.user._id
+                if (!authReq.user || comment.owner.toString() !== authReq.user._id.toString()) {
                     res.status(403).send("Forbidden: You are not the creator of this comment");
                     return;
                 }
-                // Prevent changing owner field
-                if (req.body.owner && req.body.owner !== comment.owner.toString()) {
-                    res.status(400).send("Cannot change creator of the comment");
-                    return;
+                // FIX: Strip the owner field from the body to prevent tampering
+                if (authReq.body.owner) {
+                    delete authReq.body.owner;
                 }
                 _super.update.call(this, req, res);
-                return;
             }
             catch (err) {
                 console.error(err);

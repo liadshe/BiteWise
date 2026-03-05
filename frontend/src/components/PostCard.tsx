@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 
+// @ts-ignore
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface PostProps {
     id: string;
     title: string;
@@ -19,13 +22,15 @@ interface PostProps {
 function PostCard({ id, title, description, cuisine, calories, protein, imageUrl, authorName, authorAvatar, likes, isLiked, comments, onLike }: PostProps) {
     const navigate = useNavigate(); 
 
-    // Helper to fix the image path from the server
-    const getFullImageUrl = (url: string) => {
-        if (!url) return '';
-        if (url.startsWith('http')) return url;
-        // Ensure path starts correctly and points to your backend port
-        const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-        return `http://localhost:3000/${cleanUrl}`;
+    const getImageUrl = (url: string | undefined) => {
+        if (!url) return '/default-avatar.png'; // fallback if user has no image at all
+        if (url.startsWith('http')) return url; // handles Google Auth images
+        
+        let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+        if (!cleanUrl.startsWith('uploads/')) {
+            cleanUrl = `uploads/${cleanUrl}`;
+        }
+        return `${API_BASE_URL}/${cleanUrl}`;
     };
 
     // handle like button
@@ -43,12 +48,15 @@ function PostCard({ id, title, description, cuisine, calories, protein, imageUrl
             {/* owner details */}
             <div className="card-body d-flex align-items-center pb-2">
                 <img 
-                    src={authorAvatar} 
+                    src={getImageUrl(authorAvatar)} 
                     alt={authorName} 
                     className="rounded-circle me-3 shadow-sm" 
                     width="40" 
                     height="40" 
                     style={{ objectFit: 'cover' }}
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/default-avatar.png'; 
+                    }}
                 />
                 <div>
                     <h6 className="mb-0 fw-bold">{authorName}</h6>
@@ -56,9 +64,9 @@ function PostCard({ id, title, description, cuisine, calories, protein, imageUrl
                 </div>
             </div>
 
-            {/* Main Recipe Image - Fixed to use the server URL */}
+            {/* Main Recipe Image */}
             <img 
-                src={getFullImageUrl(imageUrl)} 
+                src={getImageUrl(imageUrl)} 
                 alt={title} 
                 style={{ height: '220px', objectFit: 'cover', width: '100%' }} 
             />

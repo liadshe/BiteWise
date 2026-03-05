@@ -1,9 +1,10 @@
 import Post from "../models/postModel";
 import Comment from "../models/commentModel";
-import { Request, Response } from "express"; // ודאי ש-Request מיובא מכאן
+import { Request, Response } from "express"; 
 import baseController from "./baseController";
 import { AuthRequest } from "../middleware/authMiddleware";
 import { analyzeNutrition } from "../services/aiService";
+import mongoose from "mongoose"
 
 class PostsController extends baseController {
     constructor() {
@@ -52,7 +53,23 @@ class PostsController extends baseController {
         }
     };
 
-    // Override create method to associate post with authenticated user
+    // Override getById to populate the owner data
+    async getById(req: Request, res: Response) {
+        try {
+            const post = await this.model.findById(req.params.id).populate('owner', 'username imgUrl').lean();
+            
+            if (!post) {
+                return res.status(404).send("Post not found");
+            }
+            
+            res.status(200).json(post);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error retrieving post");
+        }
+    }
+
+// Override create method to associate post with authenticated user
     async create(req: AuthRequest, res: Response) {
         if (req.file) {
             req.body.imgUrl = req.file.path.replace(/\\/g, "/"); 
@@ -73,14 +90,14 @@ class PostsController extends baseController {
         }
 
         if (req.user) {
-            req.body.owner = req.user._id; 
+            // Explicitly cast the string to a MongoDB ObjectId
+            req.body.owner = new mongoose.Types.ObjectId(req.user._id as string); 
             req.body.likes = []; 
             req.body.createdAt = new Date(); 
         }
         
         return super.create(req, res);
     }
-
     // Override DELETE to ensure only creator can delete
     async del(req: AuthRequest, res: Response) {
         const id = req.params.id;
@@ -104,22 +121,43 @@ class PostsController extends baseController {
         }
     };
 
-    // Override PUT to prevent changing owner
-    async update(req: AuthRequest, res: Response) {
-        const id = req.params.id;
+// Override PUT to secure ownership and handle FormData updates
+    async update(req: Request, res: Response): Promise<void> {
+        const authReq = req as AuthRequest;
+        const id = authReq.params.id;
         try {
             const post = await this.model.findById(id);
             if (!post) {
                 res.status(404).send("Post not found");
                 return;
             }
-            // Prevent changing owner field
-            if (req.body.owner && req.body.owner !== post.owner.toString()) {
-                res.status(400).send("Cannot change owner of the post");
+
+            // SECURITY: Ensure the logged-in user is the actual owner of the post
+            if (authReq.user && post.owner.toString() !== authReq.user._id.toString()) {
+                res.status(403).send("Forbidden: You can only edit your own recipes");
                 return;
             }
+
+            // SAFETY NET: If multer didn't parse a body, initialize it so the app doesn't crash
+            if (!authReq.body) {
+                authReq.body = {};
+            }
+
+            // Handle new image if one was uploaded
+            if (authReq.file) {
+                authReq.body.imgUrl = authReq.file.path.replace(/\\/g, "/"); 
+            }
+
+            // Parse JSON strings sent from FormData 
+            if (authReq.body.nutrition && typeof authReq.body.nutrition === 'string') authReq.body.nutrition = JSON.parse(authReq.body.nutrition);
+            if (authReq.body.ingredients && typeof authReq.body.ingredients === 'string') authReq.body.ingredients = JSON.parse(authReq.body.ingredients);
+            if (authReq.body.instructions && typeof authReq.body.instructions === 'string') authReq.body.instructions = JSON.parse(authReq.body.instructions);
+
+            // Strip the owner field from req.body entirely so it can never be accidentally modified
+            delete authReq.body.owner;
+
+            // Pass the original req and res to the super method
             super.update(req, res);
-            return;
         }
         catch (err) {
             console.error(err);

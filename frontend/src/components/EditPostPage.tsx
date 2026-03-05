@@ -1,11 +1,17 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPost, analyzeRecipe } from '../services/postService';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { updatePost, getPostById, analyzeRecipe } from '../services/postService';
 
-function CreateRecipePage() {
+// @ts-ignore
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+function EditPostPage() {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +28,48 @@ function CreateRecipePage() {
     
     // AI Result
     const [nutritionResult, setNutritionResult] = useState<any>(null);
+
+    const getImageUrl = (url: string | undefined) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+        if (!cleanUrl.startsWith('uploads/')) cleanUrl = `uploads/${cleanUrl}`;
+        return `${API_BASE_URL}/${cleanUrl}`;
+    };
+
+    // --- Fetch Existing Data ---
+    useEffect(() => {
+        const fetchPost = async () => {
+            if (!id) return;
+            try {
+                const post = await getPostById(id);
+                
+                // Pre-fill the form fields
+                setTitle(post.title || '');
+                setDescription(post.description || '');
+                setCuisine(post.cuisine || 'Mediterranean');
+                
+                if (post.ingredients && post.ingredients.length > 0) {
+                    setIngredients(post.ingredients);
+                }
+                if (post.instructions && post.instructions.length > 0) {
+                    setInstructions(post.instructions);
+                }
+                
+                setNutritionResult(post.nutrition || null);
+                setImagePreview(getImageUrl(post.imgUrl));
+
+            } catch (err) {
+                console.error("Failed to fetch post", err);
+                toast.error("Failed to load recipe data.");
+                navigate('/home');
+            } finally {
+                setIsFetching(false);
+            }
+        };
+
+        fetchPost();
+    }, [id, navigate]);
 
     // --- Dynamic List Handlers ---
     const updateIngredient = (index: number, field: string, value: string) => {
@@ -40,12 +88,10 @@ function CreateRecipePage() {
     const addInstruction = () => setInstructions([...instructions, '']);
     const removeInstruction = (index: number) => setInstructions(instructions.filter((_, i) => i !== index));
 
-    // --- Keyboard Handlers for Auto-Add ---
     const handleIngredientKeyDown = (e: React.KeyboardEvent, index: number) => {
-        // If the user presses Tab on the very last ingredient in the list
         if (e.key === 'Tab' && index === ingredients.length - 1) {
-            e.preventDefault(); // Stop the cursor from jumping to the next section
-            addIngredient(); // Add the new row
+            e.preventDefault();
+            addIngredient();
         }
     };
 
@@ -74,6 +120,7 @@ function CreateRecipePage() {
         try {
             const result = await analyzeRecipe({ title, description, ingredients, instructions });
             setNutritionResult(result);
+            toast.success("Analysis complete!");
         } catch (err) {
             setError("Failed to analyze nutrition.");
         } finally {
@@ -81,13 +128,10 @@ function CreateRecipePage() {
         }
     };
 
-    const handleUpload = async () => {
-        if (!imageFile) {
-            setError("Please upload an image.");
-            return;
-        }
+    const handleUpdate = async () => {
+        if (!id) return;
         if (!nutritionResult) {
-            setError("Please analyze the recipe before uploading.");
+            setError("Please analyze the recipe before saving changes.");
             return;
         }
 
@@ -98,29 +142,41 @@ function CreateRecipePage() {
         formData.append('title', title);
         formData.append('description', description);
         formData.append('cuisine', cuisine);
-        formData.append('image', imageFile);
+        
+        // Only append the image if the user selected a NEW one
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
         formData.append('ingredients', JSON.stringify(ingredients));
         formData.append('instructions', JSON.stringify(instructions));
         formData.append('nutrition', JSON.stringify(nutritionResult));
 
         try {
-            await createPost(formData);
-            toast.success("Recipe uploaded successfully!");
-            navigate('/home'); 
+            await updatePost(id, formData);
+            toast.success("Recipe updated successfully!");
+            navigate(`/home/post/${id}`); 
         } catch (err) {
-            toast.error("Failed to upload recipe.");
-            setError("Failed to upload recipe. Please try again.");
+            setError("Failed to update recipe. Please try again.");
+            toast.error("Failed to update.");
         } finally {
             setIsLoading(false);
         }
     };
 
+    if (isFetching) {
+        return <div className="p-5 text-center"><div className="spinner-border" style={{color: '#e81e61'}}></div></div>;
+    }
+
     return (
         <div className="container-fluid p-4" style={{ maxWidth: '1200px' }}>
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 className="fw-bold mb-0" style={{ color: '#e81e61' }}>Create New Recipe</h2>
-                    <p className="text-muted mb-0">Share your culinary creation with the community</p>
+                    <button onClick={() => navigate(-1)} className="btn btn-link text-decoration-none text-muted p-0 mb-2 fw-bold d-flex align-items-center">
+                        <i className="bi bi-arrow-left me-2"></i> Cancel Editing
+                    </button>
+                    <h2 className="fw-bold mb-0" style={{ color: '#e81e61' }}>Edit Recipe</h2>
+                    <p className="text-muted mb-0">Update your culinary creation</p>
                 </div>
             </div>
 
@@ -150,10 +206,10 @@ function CreateRecipePage() {
 
                     {/* Image Upload Card */}
                     <div className="card border-0 shadow-sm p-4" style={{ borderRadius: '16px' }}>
-                        <label className="form-label text-muted small fw-bold mb-2">Recipe Image</label>
+                        <label className="form-label text-muted small fw-bold mb-2">Recipe Image (Click to change)</label>
                         <div 
                             className="border border-dashed d-flex flex-column justify-content-center align-items-center position-relative overflow-hidden" 
-                            style={{ borderColor: '#e81e61', borderRadius: '12px', height: '120px', backgroundColor: '#fdf3f6', cursor: 'pointer' }}
+                            style={{ borderColor: '#e81e61', borderRadius: '12px', height: '180px', backgroundColor: '#fdf3f6', cursor: 'pointer' }}
                         >
                             {imagePreview ? (
                                 <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -167,7 +223,7 @@ function CreateRecipePage() {
                         </div>
                     </div>
 
-                    {/* AI Analysis & Upload Section */}
+                    {/* AI Analysis & Update Section */}
                     <div className="card border-0 shadow-sm p-4 mt-auto" style={{ borderRadius: '16px', backgroundColor: '#fff5f8' }}>
                         <h6 style={{ color: '#e81e61' }} className="fw-bold mb-3"><i className="bi bi-stars"></i> Nutritional Analysis</h6>
                         
@@ -189,9 +245,9 @@ function CreateRecipePage() {
                                 </div>
                                 <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}><strong>Tip:</strong> {nutritionResult.suggestions}</p>
                                 
-                                <button className="btn btn-success w-100 py-2 fw-bold shadow-sm" style={{ borderRadius: '10px' }} onClick={handleUpload} disabled={isLoading}>
-                                    <i className="bi bi-cloud-upload me-2"></i>
-                                    {isLoading ? 'Uploading...' : 'Upload Recipe'}
+                                <button className="btn btn-success w-100 py-2 fw-bold shadow-sm" style={{ borderRadius: '10px' }} onClick={handleUpdate} disabled={isLoading}>
+                                    <i className="bi bi-check-circle me-2"></i>
+                                    {isLoading ? 'Saving...' : 'Save Changes'}
                                 </button>
                                 <div className="text-center mt-2">
                                     <button className="btn btn-link btn-sm text-muted text-decoration-none" onClick={() => setNutritionResult(null)}>Edit & Re-analyze</button>
@@ -212,12 +268,12 @@ function CreateRecipePage() {
                             <button className="btn btn-sm text-danger border border-danger bg-white" onClick={addIngredient} style={{ borderRadius: '8px' }}>+ Add</button>
                         </div>
                         
-                        {/* Scrollable container to keep window height fixed */}
                         <div className="pe-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                             {ingredients.map((ing, idx) => (
                                 <div key={idx} className="d-flex gap-2 mb-2 align-items-center">
                                     <input type="text" className="form-control form-control-sm border-0 bg-light p-2" placeholder="Ingredient name" value={ing.name} onChange={(e) => updateIngredient(idx, 'name', e.target.value)} style={{ borderRadius: '8px' }} />
-                                    <input type="text" className="form-control form-control-sm border-0 bg-light p-2 w-25" placeholder="Amount" value={ing.amount} onChange={(e) => updateIngredient(idx, 'amount', e.target.value)} onKeyDown={(e) => handleIngredientKeyDown(e, idx)} style={{ borderRadius: '8px' }} />                                    <button className="btn btn-sm text-danger border-0" onClick={() => removeIngredient(idx)}><i className="bi bi-x-lg"></i></button>
+                                    <input type="text" className="form-control form-control-sm border-0 bg-light p-2 w-25" placeholder="Amount" value={ing.amount} onChange={(e) => updateIngredient(idx, 'amount', e.target.value)} onKeyDown={(e) => handleIngredientKeyDown(e, idx)} style={{ borderRadius: '8px' }} />                                    
+                                    <button className="btn btn-sm text-danger border-0" onClick={() => removeIngredient(idx)}><i className="bi bi-x-lg"></i></button>
                                 </div>
                             ))}
                         </div>
@@ -230,12 +286,12 @@ function CreateRecipePage() {
                             <button className="btn btn-sm text-danger border border-danger bg-white" onClick={addInstruction} style={{ borderRadius: '8px' }}>+ Add</button>
                         </div>
 
-                        {/* Scrollable container */}
                         <div className="pe-2" style={{ maxHeight: '250px', overflowY: 'auto' }}>
                             {instructions.map((inst, idx) => (
                                 <div key={idx} className="d-flex gap-2 mb-2 align-items-start">
                                     <span className="fw-bold mt-2" style={{ color: '#e81e61', width: '20px' }}>{idx + 1}.</span>
-                                    <textarea className="form-control form-control-sm border-0 bg-light p-2" rows={2} placeholder="Describe this step..." value={inst} onChange={(e) => updateInstruction(idx, e.target.value)} onKeyDown={(e) => handleInstructionKeyDown(e, idx)} style={{ borderRadius: '8px', resize: 'none' }} />                                    <button className="btn btn-sm text-danger border-0 mt-1" onClick={() => removeInstruction(idx)}><i className="bi bi-x-lg"></i></button>
+                                    <textarea className="form-control form-control-sm border-0 bg-light p-2" rows={2} placeholder="Describe this step..." value={inst} onChange={(e) => updateInstruction(idx, e.target.value)} onKeyDown={(e) => handleInstructionKeyDown(e, idx)} style={{ borderRadius: '8px', resize: 'none' }} />                                    
+                                    <button className="btn btn-sm text-danger border-0 mt-1" onClick={() => removeInstruction(idx)}><i className="bi bi-x-lg"></i></button>
                                 </div>
                             ))}
                         </div>
@@ -247,4 +303,4 @@ function CreateRecipePage() {
     );
 }
 
-export default CreateRecipePage;
+export default EditPostPage;

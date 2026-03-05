@@ -16,6 +16,7 @@ const postModel_1 = __importDefault(require("../models/postModel"));
 const commentModel_1 = __importDefault(require("../models/commentModel"));
 const baseController_1 = __importDefault(require("./baseController"));
 const aiService_1 = require("../services/aiService");
+const mongoose_1 = __importDefault(require("mongoose"));
 class PostsController extends baseController_1.default {
     constructor() {
         super(postModel_1.default);
@@ -59,6 +60,22 @@ class PostsController extends baseController_1.default {
         });
     }
     ;
+    // Override getById to populate the owner data
+    getById(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const post = yield this.model.findById(req.params.id).populate('owner', 'username imgUrl').lean();
+                if (!post) {
+                    return res.status(404).send("Post not found");
+                }
+                res.status(200).json(post);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send("Error retrieving post");
+            }
+        });
+    }
     // Override create method to associate post with authenticated user
     create(req, res) {
         const _super = Object.create(null, {
@@ -87,7 +104,8 @@ class PostsController extends baseController_1.default {
                 return;
             }
             if (req.user) {
-                req.body.owner = req.user._id;
+                // Explicitly cast the string to a MongoDB ObjectId
+                req.body.owner = new mongoose_1.default.Types.ObjectId(req.user._id);
                 req.body.likes = [];
                 req.body.createdAt = new Date();
             }
@@ -124,26 +142,44 @@ class PostsController extends baseController_1.default {
         });
     }
     ;
-    // Override PUT to prevent changing owner
+    // Override PUT to secure ownership and handle FormData updates
     update(req, res) {
         const _super = Object.create(null, {
             update: { get: () => super.update }
         });
         return __awaiter(this, void 0, void 0, function* () {
-            const id = req.params.id;
+            const authReq = req;
+            const id = authReq.params.id;
             try {
                 const post = yield this.model.findById(id);
                 if (!post) {
                     res.status(404).send("Post not found");
                     return;
                 }
-                // Prevent changing owner field
-                if (req.body.owner && req.body.owner !== post.owner.toString()) {
-                    res.status(400).send("Cannot change owner of the post");
+                // SECURITY: Ensure the logged-in user is the actual owner of the post
+                if (authReq.user && post.owner.toString() !== authReq.user._id.toString()) {
+                    res.status(403).send("Forbidden: You can only edit your own recipes");
                     return;
                 }
+                // SAFETY NET: If multer didn't parse a body, initialize it so the app doesn't crash
+                if (!authReq.body) {
+                    authReq.body = {};
+                }
+                // Handle new image if one was uploaded
+                if (authReq.file) {
+                    authReq.body.imgUrl = authReq.file.path.replace(/\\/g, "/");
+                }
+                // Parse JSON strings sent from FormData 
+                if (authReq.body.nutrition && typeof authReq.body.nutrition === 'string')
+                    authReq.body.nutrition = JSON.parse(authReq.body.nutrition);
+                if (authReq.body.ingredients && typeof authReq.body.ingredients === 'string')
+                    authReq.body.ingredients = JSON.parse(authReq.body.ingredients);
+                if (authReq.body.instructions && typeof authReq.body.instructions === 'string')
+                    authReq.body.instructions = JSON.parse(authReq.body.instructions);
+                // Strip the owner field from req.body entirely so it can never be accidentally modified
+                delete authReq.body.owner;
+                // Pass the original req and res to the super method
                 _super.update.call(this, req, res);
-                return;
             }
             catch (err) {
                 console.error(err);
