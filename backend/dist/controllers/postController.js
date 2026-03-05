@@ -76,6 +76,19 @@ class PostsController extends baseController_1.default {
             }
         });
     }
+    getPostsByUserId(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.params.userId;
+                const posts = yield this.model.find({ owner: userId }).populate('owner', 'username imgUrl').lean();
+                res.status(200).json(posts);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send("Error retrieving user's posts");
+            }
+        });
+    }
     // Override create method to associate post with authenticated user
     create(req, res) {
         const _super = Object.create(null, {

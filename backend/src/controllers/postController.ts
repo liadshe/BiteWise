@@ -69,6 +69,17 @@ class PostsController extends baseController {
         }
     }
 
+    async getPostsByUserId(req: Request, res: Response) {
+        try {
+            const userId = req.params.userId;
+            const posts = await this.model.find({ owner: userId }).populate('owner', 'username imgUrl').lean();
+            res.status(200).json(posts);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error retrieving user's posts");
+        }
+    }
+
 // Override create method to associate post with authenticated user
     async create(req: AuthRequest, res: Response) {
         if (req.file) {
