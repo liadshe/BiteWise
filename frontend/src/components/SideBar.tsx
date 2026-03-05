@@ -10,7 +10,6 @@ import authService from '../services/authService';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const AUTH_URL = `${API_BASE_URL}/auth`;
 
-
 function Sidebar() {
     const [user, setUser] = useState<any>(null);
     const location = useLocation();
@@ -41,34 +40,44 @@ function Sidebar() {
 
     const isActive = (path: string) => location.pathname === path;
 
-
     const getImageUrl = (url: string | undefined) => {
-    if (!url) return '/default-avatar.png'; // fallback if user has no image at all
-    if (url.startsWith('http')) return url; // handles Google Auth images
-    
-    let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-    if (!cleanUrl.startsWith('uploads/')) {
-        cleanUrl = `uploads/${cleanUrl}`;
-    }
-    return `${API_BASE_URL}/${cleanUrl}`;
-};
+        if (!url) return '/default-avatar.png'; // fallback if user has no image at all
+        if (url.startsWith('http')) return url; // handles Google Auth images
+        
+        let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+        if (!cleanUrl.startsWith('uploads/')) {
+            cleanUrl = `uploads/${cleanUrl}`;
+        }
+        return `${API_BASE_URL}/${cleanUrl}`;
+    };
 
     return (
-        <div className="d-flex flex-column p-3 bg-white border-end" style={{ width: '280px', height: '100vh', position: 'sticky', top: 0 }}>
+        <div 
+            className="d-flex flex-column p-3 bg-white border-end" 
+            style={{ 
+                width: '280px', 
+                minWidth: '280px', 
+                flexShrink: 0, 
+                height: '100vh', 
+                position: 'sticky', 
+                top: 0,
+                overflowY: 'auto'
+            }}
+        >
             {/* logo */}
             <Link to="/home" className="d-flex align-items-center mb-4 text-decoration-none">
               <img src={logoImg} alt="BiteWise Logo" width="60" className="me-2" />
             </Link>
 
-            {/* navigation links */}
+         {/* navigation links */}
             <ul className="nav nav-pills flex-column mb-auto gap-2">
                 <li className="nav-item">
                     {/* Home Link */}
                     <Link 
                         to="/home" 
-                        className={`nav-link d-flex align-items-center ${isActive('/') ? 'active text-white' : 'text-dark'}`} 
+                        className={`nav-link d-flex align-items-center ${isActive('/home') ? 'active text-white' : 'text-dark'}`} 
                         style={{ 
-                            backgroundColor: isActive('/') ? '#e81e61' : 'transparent', 
+                            backgroundColor: isActive('/home') ? '#e81e61' : 'transparent', 
                             borderRadius: '12px' 
                         }}
                     >
@@ -81,7 +90,7 @@ function Sidebar() {
                         to="/home/create" 
                         className={`nav-link d-flex align-items-center ${isActive('/home/create') ? 'active text-white' : 'text-dark'}`}
                         style={{ 
-                            backgroundColor: isActive('/create') ? '#e81e61' : 'transparent', 
+                            backgroundColor: isActive('/home/create') ? '#e81e61' : 'transparent', 
                             borderRadius: '12px' 
                         }}
                     >
@@ -92,9 +101,9 @@ function Sidebar() {
                     {/* Profile Link */}
                     <Link 
                         to="/home/profile" 
-                        className={`nav-link d-flex align-items-center ${isActive('/profile') ? 'active text-white' : 'text-dark'}`}
+                        className={`nav-link d-flex align-items-center ${isActive('/home/profile') ? 'active text-white' : 'text-dark'}`}
                         style={{ 
-                            backgroundColor: isActive('/profile') ? '#e81e61' : 'transparent', 
+                            backgroundColor: isActive('/home/profile') ? '#e81e61' : 'transparent', 
                             borderRadius: '12px' 
                         }}
                     >
