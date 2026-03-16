@@ -85,6 +85,11 @@ export const analyzeRecipe = async (recipeData: any) => {
     return await response.json();
 };
 
+export const aiSearch = async (query: string) => {
+    const response = await axios.post(`${API_URL}/ai-search`, { query });
+    return response.data;
+};
+
 export const updatePost = async (id: string, postData: FormData) => {
     const token = localStorage.getItem('accessToken');
     const response = await fetch(`${API_URL}/${id}`, {

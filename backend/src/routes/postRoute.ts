@@ -8,6 +8,7 @@ const router = express.Router();
 router.get("/", postController.getAll.bind(postController));
 
 router.post("/analyze", authenticate, postController.analyze.bind(postController));
+router.post("/ai-search", (req, res) => postController.aiSearch(req, res));
 
 router.get("/:id", postController.getById.bind(postController));
 
