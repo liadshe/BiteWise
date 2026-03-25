@@ -218,7 +218,6 @@ class PostsController extends baseController {
         }
         
         const mongoFilter = await generateMongoQuery(query);
-        console.log("AI interpreted this as:", JSON.stringify(mongoFilter, null, 2));
 
         const posts = await this.model.find(mongoFilter)
             .populate('owner', 'username imgUrl')

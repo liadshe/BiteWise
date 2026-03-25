@@ -136,7 +136,6 @@ describe("Test Auth Suite", () => {
     const refreshResponse = await request(app).post("/auth/refresh").send(
       { "refreshToken": userData.refreshToken }
     );
-    console.log("Refresh response body:", refreshResponse.body);
     expect(refreshResponse.status).toBe(200);
     expect(refreshResponse.body).toHaveProperty("token");
     userData.token = refreshResponse.body.token;

@@ -98,7 +98,6 @@ const login = async (req: Request, res: Response) => {
 const googleLogin = async (req: Request, res: Response) => {
     const { credential } = req.body;
     try {
-        console.log("מנסה לאמת טוקן עם Client ID:", process.env.GOOGLE_CLIENT_ID);
         const ticket = await client.verifyIdToken({
             idToken: credential,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -131,7 +130,6 @@ const googleLogin = async (req: Request, res: Response) => {
             imgUrl: user.imgUrl
         });
     } catch (err) {
-        console.error("שגיאת אימות גוגל מפורטת:", err); // זה ידפיס לך בטרמינל למה זה נכשל
         return sendError(400, "Google authentication failed", res);
     }
 };
