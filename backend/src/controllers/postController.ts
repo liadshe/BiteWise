@@ -3,7 +3,7 @@ import Comment from "../models/commentModel";
 import { Request, Response } from "express"; 
 import baseController from "./baseController";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { analyzeNutrition } from "../services/aiService";
+import { analyzeNutrition, generateMongoQuery } from "../services/aiService";
 import mongoose from "mongoose"
 
 class PostsController extends baseController {
@@ -208,6 +208,28 @@ class PostsController extends baseController {
             res.status(500).send("Error toggling like");
         }
     }
+
+    async aiSearch(req: Request, res: Response) {
+    try {
+        const { query } = req.body; 
+        if (!query || query.trim() === "") {
+            const allPosts = await this.model.find({}).populate('owner', 'username imgUrl').lean();
+            return res.status(200).json(allPosts);
+        }
+        
+        const mongoFilter = await generateMongoQuery(query);
+        console.log("AI interpreted this as:", JSON.stringify(mongoFilter, null, 2));
+
+        const posts = await this.model.find(mongoFilter)
+            .populate('owner', 'username imgUrl')
+            .lean();
+
+        res.status(200).json(posts);
+    } catch (err) {
+        console.error("AI Search Error:", err);
+        res.status(500).send("Failed to process AI search");
+    }
+}
 }
 
 export default new PostsController();
