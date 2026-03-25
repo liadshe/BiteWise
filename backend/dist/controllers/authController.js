@@ -85,7 +85,6 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 const googleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { credential } = req.body;
     try {
-        console.log("מנסה לאמת טוקן עם Client ID:", process.env.GOOGLE_CLIENT_ID);
         const ticket = yield client.verifyIdToken({
             idToken: credential,
             audience: process.env.GOOGLE_CLIENT_ID,
@@ -115,7 +114,6 @@ const googleLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     catch (err) {
-        console.error("שגיאת אימות גוגל מפורטת:", err); // זה ידפיס לך בטרמינל למה זה נכשל
         return sendError(400, "Google authentication failed", res);
     }
 });

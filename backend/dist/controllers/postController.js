@@ -243,7 +243,6 @@ class PostsController extends baseController_1.default {
                     return res.status(200).json(allPosts);
                 }
                 const mongoFilter = yield (0, aiService_1.generateMongoQuery)(query);
-                console.log("AI interpreted this as:", JSON.stringify(mongoFilter, null, 2));
                 const posts = yield this.model.find(mongoFilter)
                     .populate('owner', 'username imgUrl')
                     .lean();

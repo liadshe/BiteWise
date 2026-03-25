@@ -9,6 +9,7 @@ const port = process.env.PORT || 3000;
     .then((app) => {
     app.listen(port, () => {
         console.log(`Posts app listening at http://localhost:${port}`);
+        console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
     });
 })
     .catch((err) => {
