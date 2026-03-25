@@ -63,7 +63,6 @@ class BaseController {
     create(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const itemData = req.body;
-            console.log(itemData);
             try {
                 const data = yield this.model.create(itemData);
                 res.status(201).json(data);

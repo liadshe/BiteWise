@@ -120,7 +120,6 @@ describe("Test Auth Suite", () => {
         expect(response.status).toBe(401);
         //refresh the token
         const refreshResponse = yield (0, supertest_1.default)(app).post("/auth/refresh").send({ "refreshToken": testUtils_1.userData.refreshToken });
-        console.log("Refresh response body:", refreshResponse.body);
         expect(refreshResponse.status).toBe(200);
         expect(refreshResponse.body).toHaveProperty("token");
         testUtils_1.userData.token = refreshResponse.body.token;

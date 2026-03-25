@@ -9,6 +9,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ path: '.env.dev' });
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const swagger_1 = __importDefault(require("./swagger"));
 const authRoute_1 = __importDefault(require("./routes/authRoute"));
 const postRoute_1 = __importDefault(require("./routes/postRoute"));
 const commentRoute_1 = __importDefault(require("./routes/commentRoute"));
@@ -21,6 +23,21 @@ app.use("/auth", authRoute_1.default);
 app.use("/post", postRoute_1.default);
 app.use("/comment", commentRoute_1.default);
 app.use("/user", userRoute_1.default);
+app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.default, {
+    customCss: `
+      #swagger-ui > .swagger-ui:first-child:before {
+    content: "";
+    display: block;
+    margin: 12px auto;
+    width: 80px;               
+    height: 80px;              
+    background-image: url('/uploads/noaLiadAv.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+    `,
+}));
 const initApp = () => {
     const pr = new Promise((resolve, reject) => {
         const dbUrl = process.env.DATABASE_URL;

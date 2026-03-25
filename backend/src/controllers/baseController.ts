@@ -54,7 +54,6 @@ class BaseController {
 
     async create(req: Request, res: Response) {
         const itemData = req.body;
-        console.log(itemData);
         try {
             const data = await this.model.create(itemData);
             res.status(201).json(data);
