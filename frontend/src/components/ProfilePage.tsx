@@ -29,10 +29,20 @@ function ProfilePage() {
     const getImageUrl = (url: string | undefined) => {
         if (!url) return '/default-avatar.png';
         if (url.startsWith('http')) return url;
-        let cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+        
+        // 1. Replace all Windows backslashes with web-safe forward slashes
+        let cleanUrl = url.replace(/\\/g, '/');
+        
+        // 2. Remove leading slash if it exists
+        if (cleanUrl.startsWith('/')) {
+            cleanUrl = cleanUrl.slice(1);
+        }
+        
+        // 3. Ensure it starts with the uploads folder
         if (!cleanUrl.startsWith('uploads/')) {
             cleanUrl = `uploads/${cleanUrl}`;
         }
+        
         return `${API_BASE_URL}/${cleanUrl}`;
     };
 

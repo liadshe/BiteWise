@@ -2,7 +2,19 @@ import request from "supertest";
 import initApp from "../index";
 import { Express } from "express";
 import User from "../models/userModel";
-import { userData, postsList } from "./testUtils"
+import { userData, postsList } from "./testUtils";
+import mongoose from "mongoose"; // Imported mongoose to close connections
+
+jest.mock('google-auth-library', () => {
+  return {
+    OAuth2Client: jest.fn().mockImplementation(() => {
+      return {
+        verifyIdToken: jest.fn().mockRejectedValue(new Error("Mocked Invalid Google Token")),
+      };
+    }),
+  };
+});
+
 let app: Express;
 
 beforeAll(async () => {
@@ -11,16 +23,24 @@ beforeAll(async () => {
   await User.deleteMany();
 });
 
-afterAll((done) => {
-  done();
+afterAll(async () => {
+  // Close the mongoose connection to resolve open handle warnings
+  await mongoose.connection.close(); 
 });
 
 describe("Test Auth Suite", () => {
 
-
   test("Test post a post without token fails", async () => {
     const postDataItem = postsList[0];
-    const response = await request(app).post("/post").send(postDataItem);
+    const response = await request(app)
+      .post("/post")
+      // Send as form-data even though it fails early, just for consistency
+      .field("title", postDataItem.title)
+      .field("description", postDataItem.description)
+      .field("cuisine", postDataItem.cuisine)
+      .field("nutrition", JSON.stringify(postDataItem.nutrition || {}))
+      .attach("image", Buffer.from("dummy image data"), "test.jpg");
+      
     expect(response.status).toBe(401);
   });
 
@@ -28,9 +48,12 @@ describe("Test Auth Suite", () => {
     const email = userData.email;
     const password = userData.password;
     const username = userData.username;
+    
+    // Auth routes use JSON, so .send() is fine here
     const response = await request(app).post("/auth/register").send(
       { "email": email, "password": password, "username": username }
     );
+    
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("token");
     userData.token = response.body.token;
@@ -41,12 +64,24 @@ describe("Test Auth Suite", () => {
     userData.refreshToken = response.body.refreshToken;
   });
 
-  test("create a post with token succeeds", async () => {
+ test("create a post with token succeeds", async () => {
+    // Grab a fresh token in case the previous one took >1s and expired
+    const loginRes = await request(app).post("/auth/login").send({
+      email: userData.email,
+      password: userData.password
+    });
+    const freshToken = loginRes.body.token;
+
     const postDataItem = postsList[0];
     const response = await request(app)
       .post("/post")
-      .set("Authorization", "Bearer " + userData.token)
-      .send(postDataItem);
+      .set("Authorization", "Bearer " + freshToken)
+      .field("title", postDataItem.title)
+      .field("description", postDataItem.description)
+      .field("cuisine", postDataItem.cuisine)
+      .field("nutrition", JSON.stringify(postDataItem.nutrition || {}))
+      .attach("image", Buffer.from("dummy image data"), "test.jpg");
+      
     expect(response.status).toBe(201);
   });
 
@@ -56,7 +91,12 @@ describe("Test Auth Suite", () => {
     const response = await request(app)
       .post("/post")
       .set("Authorization", "Bearer " + compromizedToken)
-      .send(postDataItem);
+      .field("title", postDataItem.title)
+      .field("description", postDataItem.description)
+      .field("cuisine", postDataItem.cuisine)
+      .field("nutrition", JSON.stringify(postDataItem.nutrition || {}))
+      .attach("image", Buffer.from("dummy image data"), "test.jpg");
+      
     expect(response.status).toBe(401);
   });
 
@@ -84,7 +124,12 @@ describe("Test Auth Suite", () => {
     const response = await request(app)
       .post("/post")
       .set("Authorization", "Bearer " + userData.token)
-      .send(postDataItem);
+      .field("title", postDataItem.title)
+      .field("description", postDataItem.description)
+      .field("cuisine", postDataItem.cuisine)
+      .field("nutrition", JSON.stringify(postDataItem.nutrition || {}))
+      .attach("image", Buffer.from("dummy image data"), "test.jpg");
+      
     expect(response.status).toBe(401);
 
     //refresh the token
@@ -97,11 +142,17 @@ describe("Test Auth Suite", () => {
     userData.token = refreshResponse.body.token;
     userData.refreshToken = refreshResponse.body.refreshToken;
 
-    //try to create movie again
+    //try to create post again with new token
     const retryResponse = await request(app)
       .post("/post")
       .set("Authorization", "Bearer " + userData.token)
-      .send(postDataItem);
+      // FIX: Use form-data fields for the retry as well
+      .field("title", postDataItem.title)
+      .field("description", postDataItem.description)
+      .field("cuisine", postDataItem.cuisine)
+      .field("nutrition", JSON.stringify(postDataItem.nutrition || {}))
+      .attach("image", Buffer.from("dummy image data"), "test.jpg");
+      
     expect(retryResponse.status).toBe(201);
   });
 
@@ -126,5 +177,47 @@ describe("Test Auth Suite", () => {
       { "refreshToken": newRefreshToken }
     );
     expect(refreshResponse3.status).toBe(401);
+  });
+
+  test("Login with wrong password should fail", async () => {
+    const response = await request(app).post("/auth/login").send(
+      { "email": userData.email, "password": "wrong_password_123" }
+    );
+    // Depending on your controller, this might be 400 or 401
+    expect(response.status).not.toBe(200); 
+  });
+
+  test("Login with non-existent email should fail", async () => {
+    const response = await request(app).post("/auth/login").send(
+      { "email": "nobody@nowhere.com", "password": "password" }
+    );
+    expect(response.status).not.toBe(200);
+  });
+
+  test("Register with missing fields should fail", async () => {
+    const response = await request(app).post("/auth/register").send(
+      { "email": "onlyemail@test.com" } // Missing password and username
+    );
+    expect(response.status).not.toBe(201);
+  });
+
+  test("Google Login with invalid token should fail gracefully", async () => {
+    const response = await request(app).post("/auth/google").send(
+      { credential: "fake_google_token" }
+    );
+    // It should fail to verify with Google and catch the error
+    expect(response.status).toBe(400); // Or 500 depending on your catch block
+  });
+
+  test("Auth endpoints catch 500 errors", async () => {
+    // Force the DB to crash to test the catch(err) block in login
+    const spy = jest.spyOn(User, 'findOne').mockRejectedValueOnce(new Error("DB Crash"));
+    
+    const response = await request(app).post("/auth/login").send(
+      { "email": userData.email, "password": userData.password }
+    );
+    
+    expect(response.status).toBe(500);
+    spy.mockRestore();
   });
 });

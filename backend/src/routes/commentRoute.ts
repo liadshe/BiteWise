@@ -4,12 +4,11 @@ import { authenticate} from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-// get all comments by post id
-router.get("/", commentsController.getCommentsByPostId.bind(commentsController));
+// get all comments (handles query params like ?postId= or ?owner=)
+router.get("/", commentsController.getAll.bind(commentsController));
 
 // get comment by id
 router.get("/:id", commentsController.getById.bind(commentsController));
-
 
 // add new comment
 router.post("/", authenticate, commentsController.create.bind(commentsController));
@@ -20,4 +19,4 @@ router.delete("/:id", authenticate, commentsController.del.bind(commentsControll
 // update comment by id
 router.put("/:id", authenticate, commentsController.update.bind(commentsController));
 
-export default router;
+export default router;  

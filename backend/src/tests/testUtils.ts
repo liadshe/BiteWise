@@ -90,8 +90,16 @@ export const createUser1WithPostandUser2 = async (app: Express): Promise<UserDat
     const data = await getLoggedInUser(app);
     users[0] = data;
 
-    // Create a post for the user
-    const postResponse = await request(app).post("/post").send(postsList[0]).set("Authorization", "Bearer " + (await data).token);
+    // Create a post for the user using FormData to satisfy multer
+    const postResponse = await request(app)
+        .post("/post")
+        .set("Authorization", "Bearer " + data.token)
+        .field("title", postsList[0].title)
+        .field("description", postsList[0].description)
+        .field("cuisine", postsList[0].cuisine)
+        .field("nutrition", JSON.stringify(postsList[0].nutrition))
+        .attach("image", Buffer.from("dummy image data"), "test.jpg");
+
     if (postResponse.status !== 201) {
         throw new Error(`Failed to create post for test user: ${postResponse.text}`);
     } 

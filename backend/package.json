@@ -5,17 +5,18 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node --env-file=.env.dev ./dist/server.js",
+    "start": "tsc && node --env-file=.env.prod ./dist/server.js",
     "dev": "nodemon --exec \"node --env-file=.env.dev -r ts-node/register\" src/server.ts",
     "test": "tsc && jest --detectOpenHandles --forceExit --runInBand",
-    "testPost": "tsc && jest --detectOpenHandles --forceExit --runInBand ./src/tests/post.test.ts",
+    "testPost": "tsc && jest --detectOpenHandles --forceExit --runInBand --coverage ./src/tests/post.test.ts",
     "testComment": "tsc && jest --detectOpenHandles --forceExit --runInBand ./src/tests/comment.test.ts",
     "testAuth": "tsc && jest --detectOpenHandles --forceExit --runInBand ./src/tests/auth.test.ts",
+    "testUser": "tsc && jest --detectOpenHandles --forceExit --runInBand ./src/tests/user.test.ts",
     "test:coverage": "tsc && jest --detectOpenHandles --forceExit --runInBand --coverage"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/liadshe/BiteWise-backend.git"
+    "url": "git+https://github.com/liadshe/BiteWise.git"
   },
   "keywords": [],
   "author": "",
@@ -56,6 +57,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcrypt": "^6.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.3",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.3.0",
