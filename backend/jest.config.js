@@ -8,4 +8,18 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/"           
+  ],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/",
+    "/src/server.ts",
+    "/src/index.ts",
+    "/src/tests/" 
+  ],
+  coverageReporters: ["html", "text", "text-summary"],
+
+  
 };

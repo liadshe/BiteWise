@@ -234,6 +234,27 @@ class PostsController extends baseController_1.default {
             }
         });
     }
+    aiSearch(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { query } = req.body;
+                if (!query || query.trim() === "") {
+                    const allPosts = yield this.model.find({}).populate('owner', 'username imgUrl').lean();
+                    return res.status(200).json(allPosts);
+                }
+                const mongoFilter = yield (0, aiService_1.generateMongoQuery)(query);
+                console.log("AI interpreted this as:", JSON.stringify(mongoFilter, null, 2));
+                const posts = yield this.model.find(mongoFilter)
+                    .populate('owner', 'username imgUrl')
+                    .lean();
+                res.status(200).json(posts);
+            }
+            catch (err) {
+                console.error("AI Search Error:", err);
+                res.status(500).send("Failed to process AI search");
+            }
+        });
+    }
 }
 exports.default = new PostsController();
 //# sourceMappingURL=postController.js.map

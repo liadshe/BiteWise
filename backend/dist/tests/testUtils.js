@@ -73,8 +73,15 @@ const createUser1WithPostandUser2 = (app) => __awaiter(void 0, void 0, void 0, f
     const users = [];
     const data = yield (0, exports.getLoggedInUser)(app);
     users[0] = data;
-    // Create a post for the user
-    const postResponse = yield (0, supertest_1.default)(app).post("/post").send(exports.postsList[0]).set("Authorization", "Bearer " + (yield data).token);
+    // Create a post for the user using FormData to satisfy multer
+    const postResponse = yield (0, supertest_1.default)(app)
+        .post("/post")
+        .set("Authorization", "Bearer " + data.token)
+        .field("title", exports.postsList[0].title)
+        .field("description", exports.postsList[0].description)
+        .field("cuisine", exports.postsList[0].cuisine)
+        .field("nutrition", JSON.stringify(exports.postsList[0].nutrition))
+        .attach("image", Buffer.from("dummy image data"), "test.jpg");
     if (postResponse.status !== 201) {
         throw new Error(`Failed to create post for test user: ${postResponse.text}`);
     }

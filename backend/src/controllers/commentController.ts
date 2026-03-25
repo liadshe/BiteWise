@@ -16,7 +16,22 @@ class CommentsController extends baseController {
         return super.create(req, res);
     }
 
-// Override DELETE to ensure only creator can delete
+    // Override getAll to handle queries (postId, owner, etc.) and populate the owner
+    async getAll(req: Request, res: Response) {
+        try {
+            // req.query will automatically contain filters like { postId: "..." } or { owner: "..." }
+            const comments = await this.model.find(req.query)
+                .populate('owner', 'username imgUrl')
+                .sort({ createdAt: -1 });
+                
+            res.status(200).json(comments);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Error retrieving comments");
+        }
+    }
+
+    // Override DELETE to ensure only creator can delete
     async del(req: Request, res: Response): Promise<void> {
         const authReq = req as AuthRequest;
         const id = authReq.params.id;
@@ -67,24 +82,6 @@ class CommentsController extends baseController {
             res.status(500).send("Error updating comment");
         }
     }
-
-    async getCommentsByPostId(req: AuthRequest, res: Response) {
-        const postId = req.query.postId;
-        if (!postId) {
-            res.status(400).send("postId is required");
-            return;
-        }
-        try {
-            const comments = await this.model.find({ postId: postId })
-                .populate('owner', 'username imgUrl')
-                .sort({ createdAt: -1 });
-                
-            res.status(200).json(comments);
-        } catch (err) {
-            console.error(err);
-            res.status(500).send("Error retrieving comments");
-        }
-    };
 }
 
 export default new CommentsController();

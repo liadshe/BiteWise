@@ -30,6 +30,22 @@ class CommentsController extends baseController_1.default {
             return _super.create.call(this, req, res);
         });
     }
+    // Override getAll to handle queries (postId, owner, etc.) and populate the owner
+    getAll(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // req.query will automatically contain filters like { postId: "..." } or { owner: "..." }
+                const comments = yield this.model.find(req.query)
+                    .populate('owner', 'username imgUrl')
+                    .sort({ createdAt: -1 });
+                res.status(200).json(comments);
+            }
+            catch (err) {
+                console.error(err);
+                res.status(500).send("Error retrieving comments");
+            }
+        });
+    }
     // Override DELETE to ensure only creator can delete
     del(req, res) {
         const _super = Object.create(null, {
@@ -91,26 +107,6 @@ class CommentsController extends baseController_1.default {
             }
         });
     }
-    getCommentsByPostId(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const postId = req.query.postId;
-            if (!postId) {
-                res.status(400).send("postId is required");
-                return;
-            }
-            try {
-                const comments = yield this.model.find({ postId: postId })
-                    .populate('owner', 'username imgUrl')
-                    .sort({ createdAt: -1 });
-                res.status(200).json(comments);
-            }
-            catch (err) {
-                console.error(err);
-                res.status(500).send("Error retrieving comments");
-            }
-        });
-    }
-    ;
 }
 exports.default = new CommentsController();
 //# sourceMappingURL=commentController.js.map

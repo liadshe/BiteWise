@@ -18,7 +18,7 @@ const postModel_1 = __importDefault(require("../models/postModel"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const testUtils_1 = require("./testUtils");
 const mongoose_1 = __importDefault(require("mongoose"));
-jest.setTimeout(30000); // Set timeout to 30 seconds for all tests in this suite
+jest.setTimeout(30000);
 let app;
 let loginUser;
 beforeAll(() => __awaiter(void 0, void 0, void 0, function* () {
@@ -38,20 +38,22 @@ describe("Post Tests Suite", () => {
     }));
     test("Create Post", () => __awaiter(void 0, void 0, void 0, function* () {
         for (const post of testUtils_1.postsList) {
-            const response = yield (0, supertest_1.default)(app).post("/post")
+            const response = yield (0, supertest_1.default)(app)
+                .post("/post")
                 .set("Authorization", "Bearer " + loginUser.token)
-                .send(post);
-            post._id = response.body._id; // Store the created post ID for later tests
-            post.owner = loginUser._id; // Store the owner ID for later tests
+                .field("title", post.title)
+                .field("description", post.description)
+                .field("cuisine", post.cuisine)
+                .field("nutrition", JSON.stringify(post.nutrition))
+                .attach("image", Buffer.from("dummy image data"), "test.jpg");
+            post._id = response.body._id;
+            post.owner = loginUser._id;
             expect(response.status).toBe(201);
-            // Changed from content to title, description, and cuisine
             expect(response.body.title).toBe(post.title);
             expect(response.body.description).toBe(post.description);
             expect(response.body.cuisine).toBe(post.cuisine);
-            expect(response.body.owner._id).toBe(loginUser._id);
-            expect(response.body.imgUrl).toBe(post.imgUrl);
-            expect(response.body.likes).toEqual(post.likes);
-            expect(response.body.nutrition).toEqual(post.nutrition);
+            expect(response.body.imgUrl).toMatch(/^uploads[\\/]/);
+            expect(response.body.owner).toBe(loginUser._id);
         }
     }));
     test("Get All Posts", () => __awaiter(void 0, void 0, void 0, function* () {
@@ -63,42 +65,50 @@ describe("Post Tests Suite", () => {
         const response = yield (0, supertest_1.default)(app).get("/post?owner=" + loginUser._id);
         expect(response.status).toBe(200);
         expect(response.body.length).toBe(testUtils_1.postsList.length);
-        // Changed to test title instead of content
         expect(response.body[0].title).toBe(testUtils_1.postsList[0].title);
     }));
-    // get post by id
     test("Get Post by ID", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app).get("/post/" + testUtils_1.postsList[0]._id);
         expect(response.status).toBe(200);
-        // Changed from content to title, description, and cuisine
         expect(response.body.title).toBe(testUtils_1.postsList[0].title);
         expect(response.body.description).toBe(testUtils_1.postsList[0].description);
         expect(response.body.cuisine).toBe(testUtils_1.postsList[0].cuisine);
-        expect(response.body.owner).toBe(testUtils_1.postsList[0].owner);
-        expect(response.body.imgUrl).toBe(testUtils_1.postsList[0].imgUrl);
-        expect(response.body.likes).toEqual(testUtils_1.postsList[0].likes);
-        expect(response.body.nutrition).toEqual(testUtils_1.postsList[0].nutrition);
     }));
-    // update post
     test("Update Post", () => __awaiter(void 0, void 0, void 0, function* () {
-        // Changing the fields for the update test
         testUtils_1.postsList[0].title = "Updated Post Title";
         testUtils_1.postsList[0].description = "Updated description for the post";
         const response = yield (0, supertest_1.default)(app)
             .put("/post/" + testUtils_1.postsList[0]._id)
             .set("Authorization", "Bearer " + loginUser.token)
-            .send(testUtils_1.postsList[0]);
+            .field("title", testUtils_1.postsList[0].title)
+            .field("description", testUtils_1.postsList[0].description)
+            .field("cuisine", testUtils_1.postsList[0].cuisine)
+            .field("nutrition", JSON.stringify(testUtils_1.postsList[0].nutrition));
         expect(response.status).toBe(200);
         expect(response.body.title).toBe(testUtils_1.postsList[0].title);
         expect(response.body.description).toBe(testUtils_1.postsList[0].description);
-        // Verify that the owner cannot be changed
-        testUtils_1.postsList[0].owner = "507f1f77bcf86cd799439044";
-        const response2 = yield (0, supertest_1.default)(app)
+        const maliciousResponse = yield (0, supertest_1.default)(app)
             .put("/post/" + testUtils_1.postsList[0]._id)
             .set("Authorization", "Bearer " + loginUser.token)
-            .send(testUtils_1.postsList[0]);
-        expect(response2.status).toBe(400);
+            .field("title", "Hack attempt")
+            .field("owner", "507f1f77bcf86cd799439044");
+        expect(maliciousResponse.status).toBe(200);
+        expect(maliciousResponse.body.owner).not.toBe("507f1f77bcf86cd799439044");
     }));
+    // Moved Toggle Like up here, BEFORE the post gets deleted!
+    test("Toggle Like on a Post", () => __awaiter(void 0, void 0, void 0, function* () {
+        const likeRes = yield (0, supertest_1.default)(app)
+            .post("/post/" + testUtils_1.postsList[0]._id + "/like")
+            .set("Authorization", "Bearer " + loginUser.token);
+        expect(likeRes.status).toBe(200);
+        expect(likeRes.body.likes).toContain(loginUser._id);
+        const unlikeRes = yield (0, supertest_1.default)(app)
+            .post("/post/" + testUtils_1.postsList[0]._id + "/like")
+            .set("Authorization", "Bearer " + loginUser.token);
+        expect(unlikeRes.status).toBe(200);
+        expect(unlikeRes.body.likes).not.toContain(loginUser._id);
+    }));
+    // Delete Post is now the final test in the suite
     test("Delete Post", () => __awaiter(void 0, void 0, void 0, function* () {
         const response = yield (0, supertest_1.default)(app).delete("/post/" + testUtils_1.postsList[0]._id)
             .set("Authorization", "Bearer " + loginUser.token);

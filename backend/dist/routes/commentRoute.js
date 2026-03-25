@@ -7,8 +7,8 @@ const express_1 = __importDefault(require("express"));
 const commentController_1 = __importDefault(require("../controllers/commentController"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
-// get all comments by post id
-router.get("/", commentController_1.default.getCommentsByPostId.bind(commentController_1.default));
+// get all comments (handles query params like ?postId= or ?owner=)
+router.get("/", commentController_1.default.getAll.bind(commentController_1.default));
 // get comment by id
 router.get("/:id", commentController_1.default.getById.bind(commentController_1.default));
 // add new comment

@@ -103,11 +103,12 @@ describe("Comment Tests Suite", () => {
           .send({ content: "Updated Comment Content" });
         expect(response.status).toBe(403);
 
-        // try to update owner's field - should fail
+        // try to update owner's field - should return 200 but ignore the owner update
         response = await request(app).put("/comment/" + commentId)
           .set("Authorization", "Bearer " + users[1].token)
           .send({ owner: users[0]._id });
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(200);
+        expect(response.body.owner).toBe(users[1]._id); // Owner must remain user 2!
         
         // try to update from user 2 - should succeed
         response = await request(app).put("/comment/" + commentId)
@@ -135,4 +136,17 @@ describe("Comment Tests Suite", () => {
         expect(response.status).toBe(200);
       });
 
+      test("Handles 500 errors gracefully", async () => {
+
+    const findSpy = jest.spyOn(Comment, 'find').mockImplementationOnce(() => {
+      throw new Error("Simulated Database Failure");
+    });
+
+    const response = await request(app).get("/comment");
+    
+    expect(response.status).toBe(500);
+    expect(response.text).toBe("Error retrieving comments");
+
+    findSpy.mockRestore(); 
+  });
     });

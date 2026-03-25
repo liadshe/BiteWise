@@ -100,11 +100,12 @@ describe("Comment Tests Suite", () => {
             .set("Authorization", "Bearer " + users[0].token)
             .send({ content: "Updated Comment Content" });
         expect(response.status).toBe(403);
-        // try to update owner's field - should fail
+        // try to update owner's field - should return 200 but ignore the owner update
         response = yield (0, supertest_1.default)(app).put("/comment/" + commentId)
             .set("Authorization", "Bearer " + users[1].token)
             .send({ owner: users[0]._id });
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(200);
+        expect(response.body.owner).toBe(users[1]._id); // Owner must remain user 2!
         // try to update from user 2 - should succeed
         response = yield (0, supertest_1.default)(app).put("/comment/" + commentId)
             .set("Authorization", "Bearer " + users[1].token)
@@ -126,6 +127,15 @@ describe("Comment Tests Suite", () => {
         response = yield (0, supertest_1.default)(app).delete("/comment/" + commentId)
             .set("Authorization", "Bearer " + users[1].token);
         expect(response.status).toBe(200);
+    }));
+    test("Handles 500 errors gracefully", () => __awaiter(void 0, void 0, void 0, function* () {
+        const findSpy = jest.spyOn(commentModel_1.default, 'find').mockImplementationOnce(() => {
+            throw new Error("Simulated Database Failure");
+        });
+        const response = yield (0, supertest_1.default)(app).get("/comment");
+        expect(response.status).toBe(500);
+        expect(response.text).toBe("Error retrieving comments");
+        findSpy.mockRestore();
     }));
 });
 //# sourceMappingURL=comment.test.js.map

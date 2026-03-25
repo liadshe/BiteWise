@@ -10,6 +10,7 @@ const fileUpload_1 = require("../middleware/fileUpload");
 const router = express_1.default.Router();
 router.get("/", postController_1.default.getAll.bind(postController_1.default));
 router.post("/analyze", authMiddleware_1.authenticate, postController_1.default.analyze.bind(postController_1.default));
+router.post("/ai-search", (req, res) => postController_1.default.aiSearch(req, res));
 router.get("/:id", postController_1.default.getById.bind(postController_1.default));
 router.post("/", authMiddleware_1.authenticate, fileUpload_1.upload.single('image'), postController_1.default.create.bind(postController_1.default));
 // get posts by user id
