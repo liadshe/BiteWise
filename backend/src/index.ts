@@ -63,7 +63,8 @@ const initApp = () => {
   const db = mongoose.connection;
   db.on("error", (error) => console.error(error));
   db.once("open", () => console.log("Connected to Database"));
-  
+  console.log("Current NODE_ENV:", process.env.NODE_ENV);
+  console.log("Loading from DATABASE_URL:", process.env.DATABASE_URL);
 });
   return pr;
 }
