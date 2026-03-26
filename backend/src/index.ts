@@ -1,18 +1,24 @@
 import express, { Express } from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-dotenv.config({path: '.env.dev'});
 import cors from "cors";
 import path from "path";
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from "./swagger";
 
-
 import authRoute from "./routes/authRoute";
 import postRoute from "./routes/postRoute";
 import commentRoute from "./routes/commentRoute";
 import userRoute from "./routes/userRoute";
+
+// Only load .env.dev if we are NOT in production
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: ".env.dev" });
+}
+else{
+  dotenv.config({ path: ".env.prod" });
+}
 
 const app = express();
 
