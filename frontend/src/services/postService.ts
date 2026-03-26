@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// @ts-ignore
-const API_BASE_URL = import.meta.env.VITE_API_URL || `http://localhost:3000`;
+const API_BASE_URL = 'https://node18.cs.colman.ac.il:4000';
 const API_URL =  `${API_BASE_URL}/post` ;
 
 export const getPosts = async (page?: number, cuisine?: string, search?: string) => {
