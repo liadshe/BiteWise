@@ -5,8 +5,7 @@ import { toggleLike, getPosts, deletePost } from '../services/postService';
 import authService from '../services/authService';
 import toast from 'react-hot-toast';
 
-// @ts-ignore
-const API_BASE_URL =  env.VITE_API_URL || `http://localhost:${port}`;
+const API_BASE_URL = 'https://node18.cs.colman.ac.il:4000';
 
 function ProfilePage() {
     const navigate = useNavigate();

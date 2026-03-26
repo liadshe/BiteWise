@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { updatePost, getPostById, analyzeRecipe } from '../services/postService';
 
-// @ts-ignore
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://node18.cs.colman.ac.il:4000";
 
 function EditPostPage() {
     const { id } = useParams<{ id: string }>();
