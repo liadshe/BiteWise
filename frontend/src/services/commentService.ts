@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { env } from 'process';
 
 const port = 3000;
-const API_URL = `http://localhost:${port}/comment`; 
+const API_BASE_URL = env.VITE_API_URL || `http://localhost:${port}`;
+const API_URL = `${API_BASE_URL}/comment`;
 
 export const getCommentsByPostId = async (postId: string) => {
     const response = await axios.get(API_URL, { params: { postId } });

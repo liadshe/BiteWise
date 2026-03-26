@@ -74,7 +74,7 @@ const googleLogin = async (credential: string) => {
 
 export const updateUser = async (userId: string, formData: FormData) => {
     const token = localStorage.getItem('accessToken');
-    const response = await axios.put(`http://localhost:3000/user/${userId}`, formData, {
+    const response = await axios.put(`${API_BASE_URL}/user/${userId}`, formData, {
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
