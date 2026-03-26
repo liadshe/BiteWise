@@ -1,6 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { StrictMode } from 'react'
 import 'bootstrap/dist/css/bootstrap.css'
 import App from './App' 
 import { GoogleOAuthProvider } from '@react-oauth/google';
