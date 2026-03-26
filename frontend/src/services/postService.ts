@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { env } from 'process';
 
 const port = 3000;
-const API_URL = `http://localhost:${port}/post`; 
+const API_BASE_URL = env.VITE_API_URL || `http://localhost:${port}`;
+const API_URL =  `${API_BASE_URL}/post` ;
 
 export const getPosts = async (page?: number, cuisine?: string, search?: string) => {
     const params: any = {};
